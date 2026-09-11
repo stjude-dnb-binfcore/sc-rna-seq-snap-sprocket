@@ -1,6 +1,6 @@
-root_dir: /research_jude/rgs01_jude/dept/DNB/core_operations/Bioinformatics/achroni/GitHub/stjude-biohackathon/stjude-biohackathon-KIDS26/sc-rna-seq-snap-sprocket
-data_dir: /research_jude/rgs01_jude/dept/DNB/core_operations/Bioinformatics/achroni/GitHub/stjude-biohackathon/stjude-biohackathon-KIDS26/sc-rna-seq-snap-sprocket/analyses/cellranger-analysis/results/02_cellranger_count/DefaultParameters
-metadata_dir: /research_jude/rgs01_jude/dept/DNB/core_operations/Bioinformatics/achroni/GitHub/stjude-biohackathon/stjude-biohackathon-KIDS26/sc-rna-seq-snap-sprocket/data/project_metadata
+root_dir: ./sc-rna-seq-snap-sprocket
+data_dir: ./sc-rna-seq-snap-sprocket/analyses/cellranger-analysis/results/02_cellranger_count/DefaultParameters
+metadata_dir: ./sc-rna-seq-snap-sprocket/data/project_metadata
 metadata_file: project_metadata.tsv
 genome_name: GRCm39
 PROJECT_NAME: Victoria_Knockout - sc-rna-seq-snap-sprocket
@@ -20,13 +20,13 @@ resource_profile:
   total_estimated_cells: 26901
   resource_tier: default
   scale_factor: 1
-  container_image: /research/dept/dnb/core_operations/Bioinformatics/achroni/stjude-biohackathon/stjude-biohackathon-KIDS26/sc-rna-seq-snap-sprocket/rstudio_4.4.0_seurat_4.4.0_latest.sif
+  container_image: ./sc-rna-seq-snap-sprocket/rstudio_4.4.0_seurat_4.4.0_latest.sif
   cell_count_source: cellranger_metrics
   cellranger_total_cells: 26901
   cellranger_max_cells_per_sample: 8208
 workflow_profile:
   run_upstream: yes
-  run_integrative: no
+  run_integrative: yes
   run_cluster: no
   run_contamination_removal: no
   run_cell_types: no
@@ -142,7 +142,7 @@ use_min.diff.med_annotation_module: 'NO'
 assay_annotation_module: RNA
 reference_assay_annotation_module: RNA
 singler_celldex_reference: MouseRNAseqData
-gene_markers_dir_annotation_module: /research/dept/dnb/core_operations/Bioinformatics/achroni/GitHub/stjude-biohackathon/stjude-biohackathon-KIDS26/KIDS26-Team15/analyses/sc-rna-seq-snap-Victoria-Knockout/data/
+gene_markers_dir_annotation_module: ./data/
 gene_markers_file_name_annotation_module: retinal_cell_type_top50_gene_markers-2-UPDATED.tsv
 method_annotation_module: gene_markers
 ct_palette_file_broad: cell_types_palette.tsv
@@ -168,4 +168,4 @@ future_globals_value_dego: 200
 results_filepath: ./
 mac_results_filepath: ./
 cohort_value: /NAME_OF_FORK_REPO>
-gene_markers_dir: /research_jude/rgs01_jude/dept/DNB/core_operations/Bioinformatics/achroni/GitHub/stjude-biohackathon/stjude-biohackathon-KIDS26/sc-rna-seq-snap-sprocket/data
+gene_markers_dir: ./sc-rna-seq-snap-sprocket/data

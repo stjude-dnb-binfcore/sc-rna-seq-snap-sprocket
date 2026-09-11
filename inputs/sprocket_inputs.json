@@ -1,9 +1,9 @@
 {
-  "sc_rna_seq_snap_downstream.snap_root": "/research_jude/rgs01_jude/dept/DNB/core_operations/Bioinformatics/achroni/GitHub/stjude-biohackathon/stjude-biohackathon-KIDS26/sc-rna-seq-snap-sprocket",
-  "sc_rna_seq_snap_downstream.container_image": "file:///research/dept/dnb/core_operations/Bioinformatics/achroni/stjude-biohackathon/stjude-biohackathon-KIDS26/sc-rna-seq-snap-sprocket/rstudio_4.4.0_seurat_4.4.0_latest.sif",
+  "sc_rna_seq_snap_downstream.snap_root": "./sc-rna-seq-snap-sprocket",
+  "sc_rna_seq_snap_downstream.container_image": "file:///./sc-rna-seq-snap-sprocket/rstudio_4.4.0_seurat_4.4.0_latest.sif",
   "sc_rna_seq_snap_downstream.notify_email": "antonia.chroni@stjude.org",
   "sc_rna_seq_snap_downstream.run_upstream": true,
-  "sc_rna_seq_snap_downstream.run_integrative": false,
+  "sc_rna_seq_snap_downstream.run_integrative": true,
   "sc_rna_seq_snap_downstream.run_cluster": false,
   "sc_rna_seq_snap_downstream.run_contamination_removal": false,
   "sc_rna_seq_snap_downstream.run_cell_types": false,

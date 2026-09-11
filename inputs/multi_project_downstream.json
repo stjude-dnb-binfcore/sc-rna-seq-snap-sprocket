@@ -2,9 +2,9 @@
   "sc_rna_seq_snap_downstream_multi_project.projects": [
     {
       "project_name": "project_alpha",
-      "snap_root": "/research/dept/dnb/core_operations/Bioinformatics/project_alpha/sc-rna-seq-snap",
-      "container_image": "/research/dept/dnb/core_operations/Bioinformatics/project_alpha/sc-rna-seq-snap/rstudio_4.4.0_seurat_4.4.0_latest.sif",
-      "notify_email": "achroni@stjude.org",
+      "snap_root": "./project_alpha/sc-rna-seq-snap",
+      "container_image": "./project_alpha/sc-rna-seq-snap/rstudio_4.4.0_seurat_4.4.0_latest.sif",
+      "notify_email": "antonia.chroni@stjude.org",
       "run_upstream": true,
       "run_integrative": true,
       "run_cluster": true,
@@ -25,9 +25,9 @@
     },
     {
       "project_name": "project_beta",
-      "snap_root": "/research/dept/dnb/core_operations/Bioinformatics/project_beta/sc-rna-seq-snap",
-      "container_image": "/research/dept/dnb/core_operations/Bioinformatics/project_beta/sc-rna-seq-snap/rstudio_4.4.0_seurat_4.4.0_latest.sif",
-      "notify_email": "achroni@stjude.org",
+      "snap_root": "./project_beta/sc-rna-seq-snap",
+      "container_image": "./project_beta/sc-rna-seq-snap/rstudio_4.4.0_seurat_4.4.0_latest.sif",
+      "notify_email": "antonia.chroni@stjude.org",
       "run_upstream": true,
       "run_integrative": false,
       "run_cluster": false,
