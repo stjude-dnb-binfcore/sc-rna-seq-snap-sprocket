@@ -21,3 +21,11 @@ bin-release/
 # Desktop Services Store - invisible file that gets automatically created anytime you open a folder with Finder on the macOS
 .DS_Store
 */.DS_Store
+
+# Regenerated at launch (see inputs/*.example.* templates)
+inputs/generated_downstream.json
+inputs/sprocket_inputs.json
+inputs/project_parameters.generated.yaml
+inputs/multi_project_downstream.json
+inputs/sprocket.generated.toml
+inputs/.snap-module-email-state-*
