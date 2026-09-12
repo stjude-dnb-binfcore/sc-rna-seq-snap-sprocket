@@ -252,44 +252,6 @@ Root launcher (one level up): `launch-snap-downstream.sh`
 
 ---
 
-## Advanced options
-
-**Estimate resources only (no Sprocket):**
-
-```bash
-Rscript scripts/estimate-snap-downstream-resources.R \
-  --snap-root . \
-  --output inputs/generated_downstream.json \
-  --update-yaml
-```
-
-**Override cell count** (if Cell Ranger metrics are missing):
-
-```bash
-Rscript scripts/estimate-snap-downstream-resources.R \
-  --snap-root . \
-  --estimated-cells-per-sample 8208 \
-  --output inputs/generated_downstream.json \
-  --update-yaml
-```
-
-**Overwrite master YAML in place** (creates `project_parameters.Config.yaml.orig` backup):
-
-```bash
-bash scripts/launch-snap-sprocket.sh --snap-root . --yaml-in-place --dry-run
-```
-
-**Skip YAML refresh:**
-
-```bash
-bash scripts/launch-snap-sprocket.sh --snap-root . --no-update-yaml --dry-run
-```
-
-**Skip post-run resource report:**
-
-```bash
-bash scripts/launch-snap-sprocket.sh --snap-root . --no-resource-report --submit
-```
 
 ---
 
