@@ -4,7 +4,7 @@
 # St. Jude HPC is unavailable. Production runs on HPC should use sprocket.toml.
 #
 # Quick start:
-#   cd analyses/sc-rna-seq-snap-Victoria-Knockout
+#   cd sc-rna-seq-snap-sprocket
 #   sprocket check wdl/snap.wdl
 #   sprocket validate wdl/snap.wdl @inputs/sprocket_inputs.json --config sprocket.local.toml
 #   sprocket run wdl/snap.wdl @inputs/sprocket_inputs.json --config sprocket.local.toml
