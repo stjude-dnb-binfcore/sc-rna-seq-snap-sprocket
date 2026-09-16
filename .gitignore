@@ -27,3 +27,6 @@ inputs/preprocessing.json
 
 # Sprocket unit test execution artifacts
 test/runs/
+
+# Generated WDL documentation
+_site/
