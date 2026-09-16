@@ -186,7 +186,6 @@ task estimate_downstream_resources {
   input {
     Array[String]+ sample_ids
     Array[File]+ metrics
-    File estimator_script = "../scripts/estimate-preprocessing-resources.R"
     Int cpu
     Int memory_gb
     String container_image
@@ -197,10 +196,64 @@ task estimate_downstream_resources {
 
   command <<<
     set -euo pipefail
-    Rscript "~{estimator_script}" \
-      --sample-ids-file "~{sample_ids_file}" \
-      --metrics-file-list "~{metrics_file_list}" \
-      --output-dir resources
+    Rscript --vanilla - "~{sample_ids_file}" "~{metrics_file_list}" <<'RSCRIPT'
+    abort <- function(...) stop(..., call. = FALSE)
+    args <- commandArgs(trailingOnly = TRUE)
+    sample_ids <- readLines(args[[1]], warn = FALSE)
+    metrics_paths <- readLines(args[[2]], warn = FALSE)
+
+    if (!length(sample_ids) || length(sample_ids) != length(metrics_paths)) {
+      abort("sample ID and metrics file counts must match and be nonzero")
+    }
+    if (any(!nzchar(trimws(sample_ids)))) abort("sample IDs must be nonempty")
+    if (anyDuplicated(sample_ids)) {
+      abort(
+        "duplicate sample metrics: ",
+        paste(unique(sample_ids[duplicated(sample_ids)]), collapse = ", ")
+      )
+    }
+
+    read_cells <- function(path) {
+      metrics <- tryCatch(
+        read.csv(path, check.names = FALSE, stringsAsFactors = FALSE),
+        error = function(error) {
+          abort("failed to parse metrics CSV ", path, ": ", conditionMessage(error))
+        }
+      )
+      column <- "Estimated Number of Cells"
+      if (sum(names(metrics) == column) != 1L) {
+        abort("metrics CSV must contain exactly one '", column, "' column: ", path)
+      }
+      if (nrow(metrics) != 1L) {
+        abort("metrics CSV must contain exactly one data row: ", path)
+      }
+      raw <- gsub(",", "", trimws(as.character(metrics[[column]][[1L]])), fixed = TRUE)
+      value <- suppressWarnings(as.numeric(raw))
+      if (is.na(value) || !is.finite(value) || value != as.integer(value) || value < 1L) {
+        abort("invalid Estimated Number of Cells value in ", path, ": ", raw)
+      }
+      as.integer(value)
+    }
+
+    num_samples <- length(sample_ids)
+    total_cells <- sum(vapply(metrics_paths, read_cells, integer(1)))
+    cell_scale <- max(1L, as.integer(ceiling(total_cells / 400000)))
+    resources <- c(
+      upstream_cpu = if (num_samples <= 4L) 8L else if (num_samples <= 12L) 16L else 24L,
+      upstream_memory_gb = as.integer(ceiling((30L + 10L * (cell_scale - 1L)) * 1.2)),
+      upstream_future_globals_gib = 200L + 50L * (cell_scale - 1L),
+      integrative_cpu = if (num_samples <= 8L) 10L else 16L,
+      integrative_memory_gb = as.integer(ceiling((96L + 24L * (cell_scale - 1L)) * 1.2)),
+      integrative_future_globals_gib = 200L + 50L * (cell_scale - 1L)
+    )
+
+    dir.create("resources")
+    entries <- sprintf('  "%s": %d', names(resources), resources)
+    writeLines(
+      c("{", paste(entries, collapse = ",\n"), "}"),
+      "resources/resource_estimate.json"
+    )
+    RSCRIPT
   >>>
 
   output {

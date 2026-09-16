@@ -19,11 +19,7 @@ required=(
   workflows/preprocessing.wdl
   tasks/preprocessing_types.wdl
   tasks/pre_cellranger.wdl
-  inputs/preprocessing.example.yaml
-  launch-snap-preprocessing.sh
-  scripts/launch-snap-preprocessing.sh
-  scripts/render-preprocessing-inputs.R
-  scripts/estimate-preprocessing-resources.R
+  inputs/preprocessing.example.json
 )
 
 for f in "${required[@]}"; do

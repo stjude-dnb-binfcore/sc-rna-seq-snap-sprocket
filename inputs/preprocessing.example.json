@@ -1,0 +1,25 @@
+{
+  "snap_preprocessing.project_name": "example-project",
+  "snap_preprocessing.samples": [
+    {
+      "id": "sample-1",
+      "fastq_dirs": [
+        "/absolute/path/to/sample-1/library-1"
+      ],
+      "sample_names": [
+        "sample-1"
+      ]
+    }
+  ],
+  "snap_preprocessing.genome_reference": "/absolute/path/to/cellranger/reference",
+  "snap_preprocessing.fastqc_multiqc_container": "file:///absolute/path/to/fastqc-multiqc.sif",
+  "snap_preprocessing.cellranger_container": "file:///absolute/path/to/cellranger.sif",
+  "snap_preprocessing.resource_estimator_container": "file:///absolute/path/to/r-base.sif",
+  "snap_preprocessing.fastqc_cpu": 4,
+  "snap_preprocessing.fastqc_memory_gb": 8,
+  "snap_preprocessing.multiqc_cpu": 2,
+  "snap_preprocessing.multiqc_memory_gb": 8,
+  "snap_preprocessing.cellranger_cpu": 16,
+  "snap_preprocessing.cellranger_memory_gb": 64,
+  "snap_preprocessing.cellranger_create_bam": true
+}

@@ -22,7 +22,5 @@ bin-release/
 .DS_Store
 */.DS_Store
 
-# Analyst-authored and generated preprocessing inputs
-inputs/preprocessing.yaml
-inputs/preprocessing.generated.json
-inputs/preprocessing-manifest.generated.json
+# Analyst-authored preprocessing inputs
+inputs/preprocessing.json

@@ -13,7 +13,6 @@ workflow snap_preprocessing {
     String project_name
     Array[SampleInput]+ samples
     Directory genome_reference
-    File normalized_sample_manifest
     String fastqc_multiqc_container
     String cellranger_container
     String resource_estimator_container
@@ -23,12 +22,12 @@ workflow snap_preprocessing {
     Int multiqc_memory_gb
     Int cellranger_cpu
     Int cellranger_memory_gb
-    Int estimator_cpu
-    Int estimator_memory_gb
     Boolean cellranger_create_bam
     String? cellranger_chemistry
     Int? cellranger_expected_cells
   }
+
+  File normalized_sample_manifest = write_json(samples)
 
   scatter (sample in samples) {
     String sample_id = sample.id
@@ -75,8 +74,8 @@ workflow snap_preprocessing {
     input:
       sample_ids = sample_id,
       metrics = run_cellranger.metrics,
-      cpu = estimator_cpu,
-      memory_gb = estimator_memory_gb,
+      cpu = 1,
+      memory_gb = 1,
       container_image = resource_estimator_container
   }
 
