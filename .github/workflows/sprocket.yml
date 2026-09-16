@@ -1,0 +1,54 @@
+name: Sprocket
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/sprocket.yml"
+      - ".sprocketignore"
+      - "sprocket.local.toml"
+      - "tasks/**"
+      - "test/fixtures/**"
+      - "workflows/**"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/sprocket.yml"
+      - ".sprocketignore"
+      - "sprocket.local.toml"
+      - "tasks/**"
+      - "test/fixtures/**"
+      - "workflows/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wdl:
+    name: Check and test WDL
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Sprocket
+        uses: stjude-rust-labs/setup-sprocket@v1
+        with:
+          version: "0.30.1"
+          github-token: ${{ github.token }}
+
+      - name: Check formatting
+        run: sprocket format check workflows tasks
+
+      - name: Check WDL
+        run: sprocket check workflows tasks
+
+      - name: Run WDL tests
+        run: >-
+          sprocket dev test .
+          --workspace .
+          --config sprocket.local.toml
+          --skip-config-search

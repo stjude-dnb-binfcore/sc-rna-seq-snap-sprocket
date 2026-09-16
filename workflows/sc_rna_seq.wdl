@@ -3,81 +3,69 @@ version 1.3
 import "../tasks/post_cellranger.wdl" as post_cellranger
 
 workflow sc_rna_seq {
-  meta {
-    description: "Resource-aware orchestration of snap modules from upstream onwards"
-    author: "DNB Bioinformatics Core / KIDS26 Team 15"
-  }
+    meta {
+        description: "Resource-aware orchestration of snap modules from upstream onwards"
+        author: "DNB Bioinformatics Core / KIDS26 Team 15"
+    }
 
-  input {
-    String snap_root
-    String container_image
-    String notify_email = "user.name@stjude.org"
+    input {
+        String snap_root
+        String container_image
+        String notify_email = "user.name@stjude.org"
+        Boolean run_upstream = false
+        Boolean run_integrative = false
+        Boolean run_cluster = false
+        Boolean run_contamination_removal = false
+        Boolean run_cell_types = false
+        Boolean run_clone_phylogeny = false
+        Boolean run_de_go = false
+        Boolean run_rshiny = false
+        Int num_samples = 8
+        Int estimated_cells_per_sample = 50000
+        Int upstream_cpu = 16
+        Int upstream_memory_gb = 30
+        Int upstream_future_globals_gib = 200
+        String upstream_lsf_queue = "standard"
+        Int integrative_cpu = 10
+        Int integrative_memory_gb = 96
+        Int integrative_future_globals_gib = 200
+        String integrative_lsf_queue = "standard"
+        Int cluster_cpu = 4
+        Int cluster_memory_gb = 48
+        Int cluster_future_globals_gib = 400
+        String cluster_lsf_queue = "standard"
+        Int contamination_cpu = 8
+        Int contamination_memory_gb = 96
+        Int contamination_future_globals_gib = 400
+        String contamination_lsf_queue = "standard"
+        Int cell_types_cpu = 4
+        Int cell_types_memory_gb = 64
+        String cell_types_lsf_queue = "standard"
+        Int clone_phylogeny_cpu = 16
+        Int clone_phylogeny_memory_gb = 30
+        String clone_phylogeny_lsf_queue = "standard"
+        Int de_go_cpu = 4
+        Int de_go_memory_gb = 32
+        Int de_go_future_globals_gib = 200
+        String de_go_lsf_queue = "standard"
+        Int rshiny_cpu = 4
+        Int rshiny_memory_gb = 30
+        String rshiny_lsf_queue = "standard"
+    }
 
-    Boolean run_upstream = false
-    Boolean run_integrative = false
-    Boolean run_cluster = false
-    Boolean run_contamination_removal = false
-    Boolean run_cell_types = false
-    Boolean run_clone_phylogeny = false
-    Boolean run_de_go = false
-    Boolean run_rshiny = false
+    Int total_estimated_cells = num_samples * estimated_cells_per_sample
 
-    Int num_samples = 8
-    Int estimated_cells_per_sample = 50000
+    call post_cellranger.run_upstream as upstream { input:
+        snap_root = snap_root,
+        container_image = container_image,
+        notify_email = notify_email,
+        cpu = upstream_cpu,
+        memory_gb = upstream_memory_gb,
+        future_globals_gib = upstream_future_globals_gib,
+        lsf_queue = upstream_lsf_queue,
+    }
 
-    Int upstream_cpu = 16
-    Int upstream_memory_gb = 30
-    Int upstream_future_globals_gib = 200
-    String upstream_lsf_queue = "standard"
-
-    Int integrative_cpu = 10
-    Int integrative_memory_gb = 96
-    Int integrative_future_globals_gib = 200
-    String integrative_lsf_queue = "standard"
-
-    Int cluster_cpu = 4
-    Int cluster_memory_gb = 48
-    Int cluster_future_globals_gib = 400
-    String cluster_lsf_queue = "standard"
-
-    Int contamination_cpu = 8
-    Int contamination_memory_gb = 96
-    Int contamination_future_globals_gib = 400
-    String contamination_lsf_queue = "standard"
-
-    Int cell_types_cpu = 4
-    Int cell_types_memory_gb = 64
-    String cell_types_lsf_queue = "standard"
-
-    Int clone_phylogeny_cpu = 16
-    Int clone_phylogeny_memory_gb = 30
-    String clone_phylogeny_lsf_queue = "standard"
-
-    Int de_go_cpu = 4
-    Int de_go_memory_gb = 32
-    Int de_go_future_globals_gib = 200
-    String de_go_lsf_queue = "standard"
-
-    Int rshiny_cpu = 4
-    Int rshiny_memory_gb = 30
-    String rshiny_lsf_queue = "standard"
-  }
-
-  Int total_estimated_cells = num_samples * estimated_cells_per_sample
-
-  call post_cellranger.run_upstream as upstream {
-    input:
-      snap_root = snap_root,
-      container_image = container_image,
-      notify_email = notify_email,
-      cpu = upstream_cpu,
-      memory_gb = upstream_memory_gb,
-      future_globals_gib = upstream_future_globals_gib,
-      lsf_queue = upstream_lsf_queue,
-  }
-
-    call post_cellranger.run_integrative as integrative {
-      input:
+    call post_cellranger.run_integrative as integrative { input:
         snap_root = snap_root,
         container_image = container_image,
         notify_email = notify_email,
@@ -88,8 +76,7 @@ workflow sc_rna_seq {
         wait_on = upstream.done_flag,
     }
 
-    call post_cellranger.run_cluster as cluster {
-      input:
+    call post_cellranger.run_cluster as cluster { input:
         snap_root = snap_root,
         container_image = container_image,
         notify_email = notify_email,
@@ -100,8 +87,7 @@ workflow sc_rna_seq {
         wait_on = integrative.done_flag,
     }
 
-    call post_cellranger.run_contamination_removal as contamination {
-      input:
+    call post_cellranger.run_contamination_removal as contamination { input:
         snap_root = snap_root,
         container_image = container_image,
         notify_email = notify_email,
@@ -112,8 +98,7 @@ workflow sc_rna_seq {
         wait_on = cluster.done_flag,
     }
 
-    call post_cellranger.run_cell_types as cell_types {
-      input:
+    call post_cellranger.run_cell_types as cell_types { input:
         snap_root = snap_root,
         container_image = container_image,
         notify_email = notify_email,
@@ -123,8 +108,7 @@ workflow sc_rna_seq {
         wait_on = contamination.done_flag,
     }
 
-    call post_cellranger.run_clone_phylogeny as clone_phylogeny {
-      input:
+    call post_cellranger.run_clone_phylogeny as clone_phylogeny { input:
         snap_root = snap_root,
         container_image = container_image,
         notify_email = notify_email,
@@ -133,8 +117,7 @@ workflow sc_rna_seq {
         lsf_queue = clone_phylogeny_lsf_queue,
         wait_on = cell_types.done_flag,
     }
-    call post_cellranger.run_de_go as de_go {
-      input:
+    call post_cellranger.run_de_go as de_go { input:
         snap_root = snap_root,
         container_image = container_image,
         notify_email = notify_email,
@@ -145,8 +128,7 @@ workflow sc_rna_seq {
         wait_on = clone_phylogeny.done_flag,
     }
 
-    call post_cellranger.run_rshiny as rshiny {
-      input:
+    call post_cellranger.run_rshiny as rshiny { input:
         snap_root = snap_root,
         container_image = container_image,
         notify_email = notify_email,
@@ -156,9 +138,8 @@ workflow sc_rna_seq {
         wait_on = de_go.done_flag,
     }
 
-  output {
-    Int cohort_num_samples = num_samples
-    Int cohort_total_estimated_cells = total_estimated_cells
-  }
+    output {
+        Int cohort_num_samples = num_samples
+        Int cohort_total_estimated_cells = total_estimated_cells
+    }
 }
-
