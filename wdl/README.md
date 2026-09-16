@@ -30,8 +30,10 @@ scripts/
   launch-snap-sprocket.sh
   test-downstream-layout.sh
 inputs/
-  downstream_test_3modules.json # test: upstream + integrative + cluster
-  downstream_example.json       # full downstream chain
+  sprocket_inputs.json               # inputs for sprocket validate/run
+  generated_downstream.json          # full resource-estimate snapshot
+  project_parameters.generated.yaml  # runtime config overlay
+  sprocket.generated.toml            # rendered Sprocket config
   multi_project_downstream.json
 sprocket.toml
 ```
@@ -53,19 +55,19 @@ Rscript scripts/estimate-snap-downstream-resources.R \
 
 # Validate and submit (test 3 modules first)
 sprocket check wdl/snap.wdl
-sprocket validate wdl/snap.wdl -i inputs/downstream_test_3modules.json
-sprocket run wdl/snap.wdl -i inputs/downstream_test_3modules.json --config sprocket.toml
+sprocket validate wdl/snap.wdl @inputs/sprocket_inputs.json
+sprocket run wdl/snap.wdl @inputs/sprocket_inputs.json --config sprocket.toml
 ```
 
 ## Test 3 modules (upstream → integrative → cluster)
 
-Use `inputs/downstream_test_3modules.json` — all other modules toggled off. This is the recommended first test after Cell Ranger completes.
+Use `inputs/sprocket_inputs.json` — all other modules toggled off. This is the recommended first test after Cell Ranger completes.
 
 ## Multi-project launch
 
 ```bash
 sprocket run wdl/snap_multi_project.wdl \
-  -i inputs/multi_project_downstream.json \
+  @inputs/multi_project_downstream.json \
   --config sprocket.toml
 ```
 
