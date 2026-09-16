@@ -1,0 +1,21 @@
+project:
+  name: example-project
+  metadata_tsv: /absolute/path/to/project_metadata.tsv
+  genome_reference: /absolute/path/to/cellranger/reference
+  output_dir: /absolute/path/to/sprocket-output
+
+containers:
+  fastqc_multiqc: file:///absolute/path/to/fastqc-multiqc.sif
+  cellranger: file:///absolute/path/to/cellranger.sif
+  resource_estimator: file:///absolute/path/to/resource-estimator.sif
+
+resources:
+  fastqc: { cpu: 4, memory_gb: 8 }
+  multiqc: { cpu: 2, memory_gb: 8 }
+  cellranger: { cpu: 16, memory_gb: 64 }
+  estimator: { cpu: 1, memory_gb: 4 }
+
+cellranger:
+  create_bam: true
+  chemistry: null
+  expected_cells: null

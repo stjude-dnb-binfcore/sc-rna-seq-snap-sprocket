@@ -13,6 +13,37 @@ Before launching downstream:
 3. **Apptainer/Singularity image** is present at the project root (default name: `rstudio_4.4.0_seurat_4.4.0_latest.sif`).
 4. You are on a St. Jude HPC node with **Sprocket** and **R** available.
 
+## Preprocessing-only workflow
+
+`workflows/preprocessing.wdl` runs FastQC on R2 reads, gathers reports with
+MultiQC, runs one local Cell Ranger process per normalized sample, and estimates
+resources for later upstream and integrative analyses. It does not import or
+call downstream SNAP workflows.
+
+Copy `inputs/preprocessing.example.yaml` to the ignored
+`inputs/preprocessing.yaml`, replace every example path, then validate or
+submit from the repository root:
+
+```bash
+bash launch-snap-preprocessing.sh
+bash launch-snap-preprocessing.sh --submit
+```
+
+The launcher writes ignored generated inputs under `inputs/`, checks the WDL,
+validates the rendered inputs, and passes the YAML `project.output_dir` to
+Sprocket. Use `--no-call-cache` with `--submit` to disable call caching, or
+`--test` to run the renderer/resource contract tests and WDL validation.
+
+The launch host requires the R packages `yaml` and `jsonlite`. The
+FastQC/MultiQC container must provide `bash`, `fastqc`, and `multiqc`; the Cell
+Ranger container must provide `bash` and `cellranger`; the estimator container
+must provide `Rscript`. Root `sprocket.toml` limits tasks to 24 CPUs and 512 GiB.
+
+The workflow outputs all FastQC reports, the MultiQC report and data directory,
+each Cell Ranger `outs` directory and metrics file, the normalized manifest,
+and a `DownstreamResources` struct loaded from the estimator JSON with
+`read_json`.
+
 ## Load modules
 
 ```bash
@@ -237,6 +268,9 @@ To change WDL structure, edit `scripts/generate-snap-wdl.R` and re-run the launc
 
 | Script | Purpose |
 |--------|---------|
+| `launch-snap-preprocessing.sh` | Validate or run FastQC, MultiQC, Cell Ranger, and resource estimation |
+| `render-preprocessing-inputs.R` | Strict preprocessing YAML and metadata validation → WDL inputs |
+| `estimate-preprocessing-resources.R` | Cell Ranger metrics → typed resource JSON |
 | `launch-snap-sprocket.sh` | Main orchestrator (WDL gen → estimate → check → validate → run) |
 | `generate-snap-wdl.R` | Builds `wdl/snap.wdl` with all modules optional |
 | `estimate-snap-downstream-resources.R` | Cell Ranger metrics → LSF resources + YAML/JSON |

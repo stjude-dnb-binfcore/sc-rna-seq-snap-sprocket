@@ -16,6 +16,14 @@ required=(
   inputs/sprocket_inputs.json
   scripts/estimate-snap-downstream-resources.R
   scripts/launch-snap-sprocket.sh
+  workflows/preprocessing.wdl
+  tasks/preprocessing_types.wdl
+  tasks/pre_cellranger.wdl
+  inputs/preprocessing.example.yaml
+  launch-snap-preprocessing.sh
+  scripts/launch-snap-preprocessing.sh
+  scripts/render-preprocessing-inputs.R
+  scripts/estimate-preprocessing-resources.R
 )
 
 for f in "${required[@]}"; do

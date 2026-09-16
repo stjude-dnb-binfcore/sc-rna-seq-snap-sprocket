@@ -1,5 +1,5 @@
 # Sprocket 0.30.x config for sc-rna-seq-snap on St. Jude HPC (LSF + Singularity).
-# Container image is passed per-task via workflow input container_image (see wdl/tasks.wdl).
+# Container images are passed per task via workflow inputs.
 # Schema reference: https://sprocket.bio/guides/lsf.html
 
 [run]
