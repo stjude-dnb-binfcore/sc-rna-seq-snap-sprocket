@@ -48,7 +48,7 @@ CPUs and 512 GiB.
 
 The workflow exposes typed `FastQcOutput`, `CellRangerOutput`, `SampleInput`,
 and `DownstreamResources` values. Each `CellRangerOutput` keeps the sample ID,
-`outs` directory, raw metrics CSV, and parsed `CellRangerMetrics` together. A
+`outs` directory, raw metrics CSV, and parsed estimated cell count together. A
 WDL task parses each Cell Ranger CSV before the resource task calculates the
 downstream resource struct; preprocessing requires no helper scripts.
 

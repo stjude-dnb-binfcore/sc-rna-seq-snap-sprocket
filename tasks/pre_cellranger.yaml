@@ -8,7 +8,7 @@ parse_cellranger_metrics:
       container_image: [docker://rocker/r-ver:4.4.0]
     assertions:
       stdout:
-        - '"estimated_cells":\s*1750\b'
+        - '\b1750\b'
 
   - name: missing_cell_count_fails
     tags: [unit, resources]
