@@ -27,8 +27,6 @@ workflow snap_preprocessing {
     Int? cellranger_expected_cells
   }
 
-  File normalized_sample_manifest = write_json(samples)
-
   scatter (sample in samples) {
     String sample_id = sample.id
 
@@ -54,12 +52,14 @@ workflow snap_preprocessing {
         memory_gb = cellranger_memory_gb,
         container_image = cellranger_container
     }
+
+    Array[File] sample_fastqc_reports = flatten([
+      run_fastqc.result.html_reports,
+      run_fastqc.result.zip_reports
+    ])
   }
 
-  Array[File] all_fastqc_reports = flatten([
-    flatten(run_fastqc.html_reports),
-    flatten(run_fastqc.zip_reports)
-  ])
+  Array[File] all_fastqc_reports = flatten(sample_fastqc_reports)
 
   call preprocessing.run_multiqc {
     input:
@@ -70,23 +70,38 @@ workflow snap_preprocessing {
       container_image = fastqc_multiqc_container
   }
 
+  scatter (index in range(length(samples))) {
+    call preprocessing.parse_cellranger_metrics {
+      input:
+        metrics_csv = run_cellranger.metrics[index],
+        cpu = 1,
+        memory_gb = 1,
+        container_image = resource_estimator_container
+    }
+
+    Int sample_estimated_cells = parse_cellranger_metrics.metrics.estimated_cells
+    CellRangerOutput cellranger_output = CellRangerOutput {
+      sample_id: sample_id[index],
+      count_output: run_cellranger.count_output[index],
+      metrics_csv: run_cellranger.metrics[index],
+      metrics: parse_cellranger_metrics.metrics
+    }
+  }
+
   call preprocessing.estimate_downstream_resources {
     input:
-      sample_ids = sample_id,
-      metrics = run_cellranger.metrics,
+      estimated_cells = sample_estimated_cells,
       cpu = 1,
       memory_gb = 1,
       container_image = resource_estimator_container
   }
 
   output {
-    Array[Array[File]] fastqc_html_reports = run_fastqc.html_reports
-    Array[Array[File]] fastqc_zip_reports = run_fastqc.zip_reports
+    Array[FastQcOutput] fastqc_outputs = run_fastqc.result
     File multiqc_html_report = run_multiqc.html_report
     Directory multiqc_data = run_multiqc.data
-    Array[Directory] cellranger_count_outputs = run_cellranger.count_output
-    Array[File] cellranger_metrics = run_cellranger.metrics
-    File sample_manifest = normalized_sample_manifest
+    Array[CellRangerOutput] cellranger_outputs = cellranger_output
+    Array[SampleInput] normalized_samples = samples
     DownstreamResources downstream_resources = estimate_downstream_resources.resources
   }
 }

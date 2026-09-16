@@ -33,15 +33,24 @@ sprocket run workflows/preprocessing.wdl @inputs/preprocessing.json \
   --config sprocket.toml --skip-config-search --output-dir /absolute/path/to/output
 ```
 
+Run the preprocessing resource tests with the local Docker backend:
+
+```bash
+sprocket dev test tasks/pre_cellranger.wdl --workspace . \
+  --target estimate_downstream_resources --exact \
+  --config sprocket.local.toml --skip-config-search
+```
+
 FastQC/MultiQC container must provide `bash`, `fastqc`, and `multiqc`; the Cell
 Ranger container must provide `bash` and `cellranger`; the resource estimator
 container needs only base `Rscript`. Root `sprocket.toml` limits tasks to 24
 CPUs and 512 GiB.
 
-The workflow outputs all FastQC reports, the MultiQC report and data directory,
-each Cell Ranger `outs` directory and metrics file, the normalized manifest,
-and a `DownstreamResources` struct. The WDL writes the normalized manifest and
-parses Cell Ranger metrics directly; preprocessing requires no helper scripts.
+The workflow exposes typed `FastQcOutput`, `CellRangerOutput`, `SampleInput`,
+and `DownstreamResources` values. Each `CellRangerOutput` keeps the sample ID,
+`outs` directory, raw metrics CSV, and parsed `CellRangerMetrics` together. A
+WDL task parses each Cell Ranger CSV before the resource task calculates the
+downstream resource struct; preprocessing requires no helper scripts.
 
 ## Load modules
 

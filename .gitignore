@@ -24,3 +24,6 @@ bin-release/
 
 # Analyst-authored preprocessing inputs
 inputs/preprocessing.json
+
+# Sprocket unit test execution artifacts
+test/runs/

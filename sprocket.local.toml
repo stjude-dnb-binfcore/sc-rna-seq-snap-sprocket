@@ -22,8 +22,6 @@ backend = "local_docker"
 
 [run.backends.local_docker]
 type = "docker"
-# Keep low on shared laptops; raise on a dedicated runner (e.g. 4).
-max_concurrency = 2
 
 [run.workflow.scatter]
 concurrency = 4

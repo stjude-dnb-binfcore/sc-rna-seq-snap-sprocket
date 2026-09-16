@@ -41,14 +41,14 @@ task run_fastqc {
       echo "no *R2*.fastq.gz files found for sample ~{id}" >&2
       exit 1
     fi
-    find fastqc-results -maxdepth 1 -type f \( -name '*_fastqc.html' -o -name '*_fastqc.zip' \) \
-      -print | sed 's#^.*/##' | LC_ALL=C sort > fastqc-results/report-names.txt
   >>>
 
   output {
-    Array[File] html_reports = glob("fastqc-results/*_fastqc.html")
-    Array[File] zip_reports = glob("fastqc-results/*_fastqc.zip")
-    Array[String] report_names = read_lines("fastqc-results/report-names.txt")
+    FastQcOutput result = FastQcOutput {
+      sample_id: id,
+      html_reports: glob("fastqc-results/*_fastqc.html"),
+      zip_reports: glob("fastqc-results/*_fastqc.zip")
+    }
   }
 
   runtime {
@@ -182,61 +182,72 @@ task run_cellranger {
   }
 }
 
-task estimate_downstream_resources {
+task parse_cellranger_metrics {
   input {
-    Array[String]+ sample_ids
-    Array[File]+ metrics
+    File metrics_csv
     Int cpu
     Int memory_gb
     String container_image
   }
 
-  File sample_ids_file = write_lines(sample_ids)
-  File metrics_file_list = write_lines(metrics)
+  command <<<
+    set -euo pipefail
+    Rscript --vanilla - "~{metrics_csv}" <<'RSCRIPT'
+    abort <- function(...) stop(..., call. = FALSE)
+    args <- commandArgs(trailingOnly = TRUE)
+    path <- args[[1]]
+    metrics <- tryCatch(
+      read.csv(path, check.names = FALSE, stringsAsFactors = FALSE),
+      error = function(error) {
+        abort("failed to parse metrics CSV ", path, ": ", conditionMessage(error))
+      }
+    )
+    column <- "Estimated Number of Cells"
+    if (sum(names(metrics) == column) != 1L) {
+      abort("metrics CSV must contain exactly one '", column, "' column: ", path)
+    }
+    if (nrow(metrics) != 1L) {
+      abort("metrics CSV must contain exactly one data row: ", path)
+    }
+    raw <- gsub(",", "", trimws(as.character(metrics[[column]][[1L]])), fixed = TRUE)
+    value <- suppressWarnings(as.numeric(raw))
+    if (is.na(value) || !is.finite(value) || value != as.integer(value) || value < 1L) {
+      abort("invalid Estimated Number of Cells value in ", path, ": ", raw)
+    }
+    cat(sprintf('{"estimated_cells": %d}\n', as.integer(value)))
+    RSCRIPT
+  >>>
+
+  output {
+    CellRangerMetrics metrics = read_json(stdout())
+  }
+
+  runtime {
+    cpu: cpu
+    memory: "~{memory_gb} GB"
+    container: container_image
+  }
+}
+
+task estimate_downstream_resources {
+  input {
+    Array[Int]+ estimated_cells
+    Int cpu
+    Int memory_gb
+    String container_image
+  }
 
   command <<<
     set -euo pipefail
-    Rscript --vanilla - "~{sample_ids_file}" "~{metrics_file_list}" <<'RSCRIPT'
+    Rscript --vanilla - ~{sep(" ", estimated_cells)} <<'RSCRIPT'
     abort <- function(...) stop(..., call. = FALSE)
-    args <- commandArgs(trailingOnly = TRUE)
-    sample_ids <- readLines(args[[1]], warn = FALSE)
-    metrics_paths <- readLines(args[[2]], warn = FALSE)
-
-    if (!length(sample_ids) || length(sample_ids) != length(metrics_paths)) {
-      abort("sample ID and metrics file counts must match and be nonzero")
-    }
-    if (any(!nzchar(trimws(sample_ids)))) abort("sample IDs must be nonempty")
-    if (anyDuplicated(sample_ids)) {
-      abort(
-        "duplicate sample metrics: ",
-        paste(unique(sample_ids[duplicated(sample_ids)]), collapse = ", ")
-      )
+    estimated_cells <- suppressWarnings(as.integer(commandArgs(trailingOnly = TRUE)))
+    if (!length(estimated_cells) || any(is.na(estimated_cells)) || any(estimated_cells < 1L)) {
+      abort("estimated cell counts must be positive integers")
     }
 
-    read_cells <- function(path) {
-      metrics <- tryCatch(
-        read.csv(path, check.names = FALSE, stringsAsFactors = FALSE),
-        error = function(error) {
-          abort("failed to parse metrics CSV ", path, ": ", conditionMessage(error))
-        }
-      )
-      column <- "Estimated Number of Cells"
-      if (sum(names(metrics) == column) != 1L) {
-        abort("metrics CSV must contain exactly one '", column, "' column: ", path)
-      }
-      if (nrow(metrics) != 1L) {
-        abort("metrics CSV must contain exactly one data row: ", path)
-      }
-      raw <- gsub(",", "", trimws(as.character(metrics[[column]][[1L]])), fixed = TRUE)
-      value <- suppressWarnings(as.numeric(raw))
-      if (is.na(value) || !is.finite(value) || value != as.integer(value) || value < 1L) {
-        abort("invalid Estimated Number of Cells value in ", path, ": ", raw)
-      }
-      as.integer(value)
-    }
-
-    num_samples <- length(sample_ids)
-    total_cells <- sum(vapply(metrics_paths, read_cells, integer(1)))
+    num_samples <- length(estimated_cells)
+    total_cells <- sum(estimated_cells)
     cell_scale <- max(1L, as.integer(ceiling(total_cells / 400000)))
     resources <- c(
       upstream_cpu = if (num_samples <= 4L) 8L else if (num_samples <= 12L) 16L else 24L,
@@ -247,18 +258,13 @@ task estimate_downstream_resources {
       integrative_future_globals_gib = 200L + 50L * (cell_scale - 1L)
     )
 
-    dir.create("resources")
     entries <- sprintf('  "%s": %d', names(resources), resources)
-    writeLines(
-      c("{", paste(entries, collapse = ",\n"), "}"),
-      "resources/resource_estimate.json"
-    )
+    cat("{\n", paste(entries, collapse = ",\n"), "\n}\n", sep = "")
     RSCRIPT
   >>>
 
   output {
-    File resource_estimate_json = "resources/resource_estimate.json"
-    DownstreamResources resources = read_json(resource_estimate_json)
+    DownstreamResources resources = read_json(stdout())
   }
 
   runtime {

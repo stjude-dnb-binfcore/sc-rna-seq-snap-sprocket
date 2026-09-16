@@ -19,7 +19,11 @@ required=(
   workflows/preprocessing.wdl
   tasks/preprocessing_types.wdl
   tasks/pre_cellranger.wdl
+  tasks/pre_cellranger.yaml
   inputs/preprocessing.example.json
+  test/fixtures/preprocessing/cells-1750-quoted.csv
+  test/fixtures/preprocessing/missing-cell-count.csv
+  test/fixtures/preprocessing/not-a-number.csv
 )
 
 for f in "${required[@]}"; do

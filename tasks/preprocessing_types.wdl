@@ -6,6 +6,23 @@ struct SampleInput {
   Array[String]+ sample_names
 }
 
+struct FastQcOutput {
+  String sample_id
+  Array[File] html_reports
+  Array[File] zip_reports
+}
+
+struct CellRangerMetrics {
+  Int estimated_cells
+}
+
+struct CellRangerOutput {
+  String sample_id
+  Directory count_output
+  File metrics_csv
+  CellRangerMetrics metrics
+}
+
 struct DownstreamResources {
   Int upstream_cpu
   Int upstream_memory_gb
