@@ -97,7 +97,7 @@ workflow sc_rna_seq {
         memory_gb = cluster_memory_gb,
         future_globals_gib = cluster_future_globals_gib,
         lsf_queue = cluster_lsf_queue,
-        wait_on = integrative_y.done_flag,
+        wait_on = integrative.done_flag,
     }
 
     call post_cellranger.run_contamination_removal as contamination {
@@ -109,7 +109,7 @@ workflow sc_rna_seq {
         memory_gb = contamination_memory_gb,
         future_globals_gib = contamination_future_globals_gib,
         lsf_queue = contamination_lsf_queue,
-        wait_on = cluster_y_y.done_flag,
+        wait_on = cluster.done_flag,
     }
 
     call post_cellranger.run_cell_types as cell_types {
@@ -120,7 +120,7 @@ workflow sc_rna_seq {
         cpu = cell_types_cpu,
         memory_gb = cell_types_memory_gb,
         lsf_queue = cell_types_lsf_queue,
-        wait_on = contamination_y_y_y.done_flag,
+        wait_on = contamination.done_flag,
     }
 
     call post_cellranger.run_clone_phylogeny as clone_phylogeny {
@@ -131,7 +131,7 @@ workflow sc_rna_seq {
         cpu = clone_phylogeny_cpu,
         memory_gb = clone_phylogeny_memory_gb,
         lsf_queue = clone_phylogeny_lsf_queue,
-        wait_on = cell_types_y_y_y_y.done_flag,
+        wait_on = cell_types.done_flag,
     }
     call post_cellranger.run_de_go as de_go {
       input:
@@ -142,7 +142,7 @@ workflow sc_rna_seq {
         memory_gb = de_go_memory_gb,
         future_globals_gib = de_go_future_globals_gib,
         lsf_queue = de_go_lsf_queue,
-        wait_on = clone_phylogeny_y_y_y_y_y.done_flag,
+        wait_on = clone_phylogeny.done_flag,
     }
 
     call post_cellranger.run_rshiny as rshiny {
@@ -153,7 +153,7 @@ workflow sc_rna_seq {
         cpu = rshiny_cpu,
         memory_gb = rshiny_memory_gb,
         lsf_queue = rshiny_lsf_queue,
-        wait_on = de_go_y_y_y_y_y_y.done_flag,
+        wait_on = de_go.done_flag,
     }
 
   output {
