@@ -13,8 +13,7 @@ required=(
   wdl/resources.wdl
   wdl/snap_multi_project.wdl
   sprocket.toml
-  inputs/downstream_test_3modules.json
-  inputs/downstream_example.json
+  inputs/sprocket_inputs.json
   scripts/estimate-snap-downstream-resources.R
   scripts/launch-snap-sprocket.sh
 )
