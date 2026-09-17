@@ -1,6 +1,7 @@
 version 1.3
 
-import "../tasks/post_cellranger.wdl" as post_cellranger
+import "../tasks/post_cellranger_required.wdl" as required
+import "../tasks/post_cellranger_optional.wdl" as optional
 import "../tasks/pre_cellranger.wdl" as preprocessing
 import "../tasks/preprocessing_types.wdl" as types
 
@@ -66,7 +67,7 @@ workflow daedalus_from_cellranger {
         container_image = resource_estimator_container,
     }
 
-    call post_cellranger.run_upstream as upstream after write_cellranger_summary { input:
+    call required.run_upstream as upstream after write_cellranger_summary { input:
         snap_root = project_root,
         container_image = downstream_container,
         notify_email = notify_email,
@@ -75,7 +76,60 @@ workflow daedalus_from_cellranger {
         future_globals_gib = estimate_downstream_resources.resources.upstream_future_globals_gib,
     }
 
-    call post_cellranger.run_integrative as integrative after upstream { input:
+    call required.run_cluster as cluster after upstream { input:
+        snap_root = project_root,
+        container_image = downstream_container,
+        notify_email = notify_email,
+        cpu = estimate_downstream_resources.resources.integrative_cpu,
+        memory_gb = estimate_downstream_resources.resources.integrative_memory_gb,
+        future_globals_gib = estimate_downstream_resources.resources.integrative_future_globals_gib,
+    }
+
+    call required.run_cell_types as annotation after cluster { input:
+        snap_root = project_root,
+        container_image = downstream_container,
+        notify_email = notify_email,
+        cpu = estimate_downstream_resources.resources.integrative_cpu,
+        memory_gb = estimate_downstream_resources.resources.integrative_memory_gb,
+        future_globals_gib = estimate_downstream_resources.resources.integrative_future_globals_gib,
+    }
+
+    call required.run_rshiny as shiny after annotation { input:
+        snap_root = project_root,
+        container_image = downstream_container,
+        notify_email = notify_email,
+        cpu = estimate_downstream_resources.resources.integrative_cpu,
+        memory_gb = estimate_downstream_resources.resources.integrative_memory_gb,
+        future_globals_gib = estimate_downstream_resources.resources.integrative_future_globals_gib,
+    }
+
+    call optional.run_integrative as integrative after upstream { input:
+        snap_root = project_root,
+        container_image = downstream_container,
+        notify_email = notify_email,
+        cpu = estimate_downstream_resources.resources.integrative_cpu,
+        memory_gb = estimate_downstream_resources.resources.integrative_memory_gb,
+        future_globals_gib = estimate_downstream_resources.resources.integrative_future_globals_gib,
+    }
+
+    call optional.run_contamination_removal as contamination_removal after cluster { input:
+        snap_root = project_root,
+        container_image = downstream_container,
+        notify_email = notify_email,
+        cpu = estimate_downstream_resources.resources.integrative_cpu,
+        memory_gb = estimate_downstream_resources.resources.integrative_memory_gb,
+        future_globals_gib = estimate_downstream_resources.resources.integrative_future_globals_gib,
+    }
+
+    call optional.run_clone_phylogeny as clone_phylogeny after annotation { input:
+        snap_root = project_root,
+        container_image = downstream_container,
+        notify_email = notify_email,
+        cpu = estimate_downstream_resources.resources.integrative_cpu,
+        memory_gb = estimate_downstream_resources.resources.integrative_memory_gb,
+    }
+
+    call optional.run_de_go as de_go after annotation { input:
         snap_root = project_root,
         container_image = downstream_container,
         notify_email = notify_email,
@@ -98,7 +152,19 @@ workflow daedalus_from_cellranger {
         Int integrative_future_globals_gib = estimate_downstream_resources.resources.integrative_future_globals_gib
         File upstream_completion = upstream.done_flag
         String upstream_results = project_root + "/analyses/upstream-analysis/results"
+        File cluster_completion = cluster.done_flag
+        String cluster_results = project_root + "/analyses/cluster-cell-calling"
+        File annotation_completion = annotation.done_flag
+        String annotation_results = project_root + "/analyses/cell-types-annotation"
+        File shiny_completion = shiny.done_flag
+        String shiny_results = project_root + "/analyses/rshiny-app"
         File integrative_completion = integrative.done_flag
         String integrative_results = project_root + "/analyses/integrative-analysis/results"
+        File contamination_removal_completion = contamination_removal.done_flag
+        String contamination_removal_results = project_root + "/analyses/cell-contamination-removal-analysis"
+        File clone_phylogeny_completion = clone_phylogeny.done_flag
+        String clone_phylogeny_results = project_root + "/analyses/clone-phylogeny-analysis"
+        File de_go_completion = de_go.done_flag
+        String de_go_results = project_root + "/analyses/de-go-analysis"
     }
 }
