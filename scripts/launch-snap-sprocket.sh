@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Launch the static from_cellranger workflow (upstream onwards) via Sprocket.
+# Launch the static daedalus_from_cellranger workflow (upstream onwards) via Sprocket.
 #
 # Usage:
 #   bash scripts/launch-snap-sprocket.sh [--snap-root PATH] [--no-update-yaml] [--yaml-in-place] [--dry-run] [--no-resource-report]
@@ -53,7 +53,7 @@ if [[ ! -f "${WORKFLOW}" ]]; then
 fi
 
 if ! command -v sprocket >/dev/null 2>&1; then
-  echo "sprocket not found. Install it or add its bin directory to PATH." >&2
+  echo "sprocket not found. On St. Jude HPC: module load sprocket"
   exit 1
 fi
 
@@ -112,6 +112,7 @@ send_workflow_email "[snap] workflow: submitted" \
   "Snap downstream workflow submitted at $(date -Is)\nProject: ${SNAP_ROOT}\nConfig: ${CONFIG}"
 
 set +e
+# Shared directories are passed as String paths, so call caching cannot detect changes to their contents.
 SPROCKET_RUN_FLAGS=(run "${WORKFLOW}" @"${INPUTS}" --config "${CONFIG}" --output-dir "${SNAP_ROOT}/out" --no-call-cache)
 sprocket "${SPROCKET_RUN_FLAGS[@]}" &
 SPROCKET_PID=$!

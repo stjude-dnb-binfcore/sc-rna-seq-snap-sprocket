@@ -5,7 +5,7 @@ set -euo pipefail
 #
 # Prerequisites:
 #   - FastQC and Cell Ranger complete under analyses/cellranger-analysis/
-#   - module load R singularity; Sprocket available on PATH
+#   - module load sprocket R singularity   (on St. Jude HPC)
 #   - Apptainer/Singularity image at rstudio_4.4.0_seurat_4.4.0_latest.sif
 #
 # Usage (from this directory):

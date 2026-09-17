@@ -289,7 +289,7 @@ build_cellranger_inputs <- function(data_dir, cellranger) {
   sample_ids <- sort(names(cellranger$per_sample))
   if (!length(sample_ids)) {
     stop(
-      "The static from_cellranger workflow requires completed Cell Ranger outputs under:\n  ",
+      "The static daedalus_from_cellranger workflow requires completed Cell Ranger outputs under:\n  ",
       data_dir
     )
   }
