@@ -26,7 +26,6 @@ task run_integrative {
         echo "Module: integrative  LSF mail: ~{notify_email}"
         export SNAP_CONFIG_FILE="~{snap_root}/inputs/project_parameters.generated.yaml"
         export FUTURE_GLOBALS_MAXSIZE_GIB="~{future_globals_gib}"
-        export SNAP_FUTURE_WORKERS="~{cpu}"
         cd "~{snap_root}/analyses/integrative-analysis"
         bash run-integrative-analysis.sh
         echo "done" > "${TASK_DIR}/integrative.done"

@@ -67,7 +67,7 @@ submission disables Sprocket call caching.
 
 The launcher rewrites these ignored runtime files:
 
-- `inputs/project_parameters.generated.yaml`
+- `<root_dir>/inputs/project_parameters.generated.yaml`
 - `inputs/generated_downstream.json`
 - `inputs/sprocket_inputs.json`
 - `inputs/sprocket.generated.toml`
@@ -77,4 +77,4 @@ Workflow execution data is stored under
 `out/resource_usage/`.
 
 Downstream tasks set `SNAP_CONFIG_FILE` to
-`inputs/project_parameters.generated.yaml`.
+`<root_dir>/inputs/project_parameters.generated.yaml`.

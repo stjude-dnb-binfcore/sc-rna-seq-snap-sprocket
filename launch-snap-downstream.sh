@@ -16,7 +16,7 @@ set -euo pipefail
 #   1. Counts samples from project_metadata.tsv (or Cell Ranger output dirs)
 #   2. Reads Cell Ranger metrics_summary.csv for cells/sample
 #   3. Scales LSF CPU and memory per module (baseline: 8 samples x 50k cells)
-#   4. Writes inputs/project_parameters.generated.yaml (master Config.yaml unchanged)
+#   4. Writes <root_dir>/inputs/project_parameters.generated.yaml (master Config.yaml unchanged)
 #   5. Writes inputs/generated_downstream.json for Sprocket
 #
 # Edit project_parameters.Config.yaml for biology parameters and workflow_profile toggles.

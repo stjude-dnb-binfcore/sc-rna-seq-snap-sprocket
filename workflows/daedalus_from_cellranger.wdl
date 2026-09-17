@@ -3,7 +3,6 @@ version 1.3
 import "../tasks/post_cellranger_optional.wdl" as optional
 import "../tasks/post_cellranger_required.wdl" as required
 import "../tasks/pre_cellranger.wdl" as preprocessing
-import "../tasks/preprocessing_types.wdl" as types
 
 workflow daedalus_from_cellranger {
     meta {

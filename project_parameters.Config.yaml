@@ -29,7 +29,7 @@ resource_profile:
 # Which downstream modules to run via WDL/Sprocket (all optional).
 # WDL `after` clauses preserve ordering among enabled modules.
 # If a producer module is disabled, its required output must already exist.
-# Example — upstream only: run_upstream: true, all others false.
+# Example - upstream only: run_upstream: true, all others false.
 workflow_profile:
   run_upstream: true
   run_integrative: true
@@ -75,7 +75,7 @@ nfeatures_value: 3000 # define number of variable features
 prefix: "lognorm" # create label based on the normalization method used
 use_miQC: "NO" # Options: "YES" or "NO". Use of miQC R package or not; see `README.md` file for more information.
 use_only_step1: "NO" # Options: "YES" or "NO". Use of both or only first step for filtering low quality cells; see `README.md` file for more information.
-condition_value1: "Disease" # Use discrete values. Min #conditions per project: 1 and Max #conditions per project: 3. To use for visualization purposes and split UMAPs. Value to be extracted from column name in `project_metadata.tsv` file. 
+condition_value1: "condition" # Use discrete values. Min #conditions per project: 1 and Max #conditions per project: 3. To use for visualization purposes and split UMAPs. Value to be extracted from column name in `project_metadata.tsv` file.
 condition_value2: NULL # Use discrete values. Min #conditions per project: 1 and Max #conditions per project: 3. To use for visualization purposes and split UMAPs. Value to be extracted from column name in `project_metadata.tsv` file. 
 condition_value3: NULL # Use discrete values. Min #conditions per project: 1 and Max #conditions per project: 3. To use for visualization purposes and split UMAPs. Value to be extracted from column name in `project_metadata.tsv` file. 
 

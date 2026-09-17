@@ -9,7 +9,7 @@ set -euo pipefail
 # Sprocket call caching is always disabled so each launch runs the selected modules.
 #
 # --update-yaml (default): writes inputs/project_parameters.generated.yaml;
-#   populates root_dir/data_dir/metadata_dir from snap-root and reads Cell Ranger metrics;
+#   resolves root_dir/data_dir/metadata_dir from the master config and reads Cell Ranger metrics;
 #   project_parameters.Config.yaml (your master template) is not modified.
 # --yaml-in-place: overwrite master YAML (creates project_parameters.Config.yaml.orig first).
 
@@ -29,7 +29,6 @@ while [[ $# -gt 0 ]]; do
     --no-update-yaml) UPDATE_YAML=0; shift ;;
     --yaml-in-place) YAML_IN_PLACE=1; UPDATE_YAML=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
-    --no-call-cache|--no-call-caching) shift ;;
     --no-resource-report) COLLECT_RESOURCES=0; shift ;;
     -h|--help)
       echo "Usage: bash scripts/launch-snap-sprocket.sh [--snap-root PATH] [--no-update-yaml] [--yaml-in-place] [--dry-run] [--no-resource-report]"

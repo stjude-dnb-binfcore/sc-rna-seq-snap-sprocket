@@ -127,54 +127,6 @@ count_metadata_samples <- function(metadata_path) {
   length(unique(trimws(as.character(md$ID))))
 }
 
-validate_metadata_samples <- function(metadata_path, cellranger_sample_ids, data_dir) {
-  if (!file.exists(metadata_path)) {
-    stop("Project metadata does not exist: ", metadata_path)
-  }
-
-  md <- suppressWarnings(read.delim(metadata_path, stringsAsFactors = FALSE))
-  if (!"ID" %in% colnames(md)) stop("Metadata must contain an ID column: ", metadata_path)
-
-  raw_metadata_ids <- trimws(as.character(md$ID))
-  raw_metadata_ids <- raw_metadata_ids[!is.na(raw_metadata_ids) & nzchar(raw_metadata_ids)]
-  duplicate_ids <- sort(unique(raw_metadata_ids[duplicated(raw_metadata_ids)]))
-  if (length(duplicate_ids)) {
-    stop(
-      "Project metadata IDs must be unique. Duplicates: ",
-      paste(duplicate_ids, collapse = ", "),
-      "\n  Metadata: ", metadata_path
-    )
-  }
-  metadata_ids <- sort(raw_metadata_ids)
-  cellranger_ids <- sort(unique(trimws(as.character(cellranger_sample_ids))))
-
-  missing_metadata <- setdiff(cellranger_ids, metadata_ids)
-  missing_cellranger <- setdiff(metadata_ids, cellranger_ids)
-  if (length(missing_metadata) || length(missing_cellranger)) {
-    details <- character()
-    if (length(missing_metadata)) {
-      details <- c(
-        details,
-        paste0("  Missing from metadata: ", paste(missing_metadata, collapse = ", "))
-      )
-    }
-    if (length(missing_cellranger)) {
-      details <- c(
-        details,
-        paste0("  Missing Cell Ranger output: ", paste(missing_cellranger, collapse = ", "))
-      )
-    }
-    stop(
-      "Project metadata IDs must exactly match completed Cell Ranger sample directories.\n",
-      paste(details, collapse = "\n"),
-      "\n  Metadata: ", metadata_path,
-      "\n  Cell Ranger root: ", data_dir
-    )
-  }
-
-  invisible(metadata_ids)
-}
-
 parse_cellranger_metrics <- function(metrics_path) {
   if (!file.exists(metrics_path)) return(NA_integer_)
   lines <- readLines(metrics_path, warn = FALSE)
@@ -230,25 +182,36 @@ estimate_cells_from_cellranger <- function(data_dir) {
 
 resolve_project_paths <- function(cfg, snap_root) {
   snap_root <- normalizePath(snap_root, winslash = "/", mustWork = TRUE)
+  root_dir <- cfg$root_dir %||% snap_root
+  if (!startsWith(root_dir, "/")) root_dir <- file.path(snap_root, root_dir)
+  root_dir <- normalizePath(root_dir, winslash = "/", mustWork = FALSE)
   params <- cfg$cellranger_parameters %||% "DefaultParameters"
+  data_dir <- cfg$data_dir %||% file.path(
+    root_dir, "analyses", "cellranger-analysis", "results",
+    "02_cellranger_count", params
+  )
+  metadata_dir <- cfg$metadata_dir %||% file.path(root_dir, "data", "project_metadata")
+  gene_markers_dir <- cfg$gene_markers_dir %||% file.path(root_dir, "data")
+  if (!startsWith(data_dir, "/")) data_dir <- file.path(root_dir, data_dir)
+  if (!startsWith(metadata_dir, "/")) metadata_dir <- file.path(root_dir, metadata_dir)
+  if (!startsWith(gene_markers_dir, "/")) {
+    gene_markers_dir <- file.path(root_dir, gene_markers_dir)
+  }
 
   list(
     snap_root = snap_root,
-    root_dir = snap_root,
-    data_dir = file.path(
-      snap_root, "analyses", "cellranger-analysis", "results",
-      "02_cellranger_count", params
-    ),
-    metadata_dir = file.path(snap_root, "data", "project_metadata"),
-    gene_markers_dir = file.path(snap_root, "data"),
+    root_dir = root_dir,
+    data_dir = normalizePath(data_dir, winslash = "/", mustWork = FALSE),
+    metadata_dir = normalizePath(metadata_dir, winslash = "/", mustWork = FALSE),
+    gene_markers_dir = normalizePath(gene_markers_dir, winslash = "/", mustWork = FALSE),
     container_image = {
       existing <- cfg$resource_profile$container_image %||% ""
-      if (nzchar(existing)) existing else file.path(snap_root, "rstudio_4.4.0_seurat_4.4.0_latest.sif")
+      if (nzchar(existing)) existing else file.path(root_dir, "rstudio_4.4.0_seurat_4.4.0_latest.sif")
     }
   )
 }
 
-#' Derive root_dir, data_dir, metadata_dir, and container_image from snap_root (for YAML write).
+#' Resolve configured project paths and write them to the generated YAML.
 populate_project_paths <- function(cfg, snap_root) {
   paths <- resolve_project_paths(cfg, snap_root)
   cfg$root_dir <- paths$root_dir
@@ -415,12 +378,9 @@ main <- function() {
   }
   cellranger_inputs <- build_cellranger_inputs(paths$data_dir, cellranger)
   toggles <- workflow_toggles(cfg)
-  if (any(unlist(toggles, use.names = FALSE))) {
-    validate_metadata_samples(metadata_path, names(cellranger$per_sample), paths$data_dir)
-  }
-  container_image <- sprocket_container_uri(paths$container_image, snap_root)
+  container_image <- sprocket_container_uri(paths$container_image, paths$root_dir)
 
-  cat("Downstream resource estimate:", snap_root, "\n")
+  cat("Downstream resource estimate:", paths$root_dir, "\n")
   cat("  tier:", res$resource_tier, " samples:", res$num_samples,
       " cells/sample (", cell_count_source, "):", res$estimated_cells_per_sample,
       " total cells:", res$total_estimated_cells, "\n")
@@ -442,7 +402,8 @@ main <- function() {
     write_updated_yaml(
       cfg = cfg,
       master_path = config_path,
-      yaml_output = args$yaml_output,
+      yaml_output = args$yaml_output %||%
+        file.path(paths$root_dir, "inputs", "project_parameters.generated.yaml"),
       yaml_in_place = isTRUE(args$yaml_in_place)
     )
   }
@@ -451,7 +412,7 @@ main <- function() {
   payload <- list(
     resource_estimate = res,
     sprocket_inputs = build_sprocket_inputs(
-      snap_root,
+      paths$root_dir,
       container_image,
       notify_email,
       toggles,
