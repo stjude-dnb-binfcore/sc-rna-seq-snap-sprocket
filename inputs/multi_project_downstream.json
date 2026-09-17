@@ -13,15 +13,12 @@
       "upstream_cpu": 16,
       "upstream_memory_gb": 30,
       "upstream_future_globals_gib": 200,
-      "upstream_lsf_queue": "standard",
       "integrative_cpu": 10,
       "integrative_memory_gb": 96,
       "integrative_future_globals_gib": 200,
-      "integrative_lsf_queue": "standard",
       "cluster_cpu": 4,
       "cluster_memory_gb": 48,
-      "cluster_future_globals_gib": 400,
-      "cluster_lsf_queue": "standard"
+      "cluster_future_globals_gib": 400
     },
     {
       "project_name": "project_beta",
@@ -36,15 +33,12 @@
       "upstream_cpu": 24,
       "upstream_memory_gb": 50,
       "upstream_future_globals_gib": 250,
-      "upstream_lsf_queue": "standard",
       "integrative_cpu": 16,
       "integrative_memory_gb": 120,
       "integrative_future_globals_gib": 250,
-      "integrative_lsf_queue": "standard",
       "cluster_cpu": 8,
       "cluster_memory_gb": 64,
-      "cluster_future_globals_gib": 500,
-      "cluster_lsf_queue": "standard"
+      "cluster_future_globals_gib": 500
     }
   ]
 }

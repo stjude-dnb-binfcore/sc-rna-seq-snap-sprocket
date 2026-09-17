@@ -75,7 +75,7 @@ sprocket run wdl/snap_multi_project.wdl \
 ## Before submitting
 
 - Set real paths in inputs/*.json (snap_root, container_image)
-- Update sprocket.toml container path and LSF queue/project
+- Update `sprocket.toml` with the LSF queue and project
 -  Ensure project_metadata.tsv exists (resource script counts samples from it)
 
 sprocket is not on PATH in this environment — use module load sprocket on St. Jude HPC.

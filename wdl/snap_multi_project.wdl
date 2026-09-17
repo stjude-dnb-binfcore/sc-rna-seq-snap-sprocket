@@ -23,17 +23,14 @@ struct SnapDownstreamProjectRun {
   Int upstream_cpu = 16
   Int upstream_memory_gb = 30
   Int upstream_future_globals_gib = 200
-  String upstream_lsf_queue = "standard"
 
   Int integrative_cpu = 10
   Int integrative_memory_gb = 96
   Int integrative_future_globals_gib = 200
-  String integrative_lsf_queue = "standard"
 
   Int cluster_cpu = 4
   Int cluster_memory_gb = 48
   Int cluster_future_globals_gib = 400
-  String cluster_lsf_queue = "standard"
 }
 
 # Launch multiple downstream snap workflows concurrently (multiple projects or pipelines).
@@ -65,15 +62,12 @@ workflow sc_rna_seq_snap_downstream_multi_project {
         upstream_cpu = project.upstream_cpu,
         upstream_memory_gb = project.upstream_memory_gb,
         upstream_future_globals_gib = project.upstream_future_globals_gib,
-        upstream_lsf_queue = project.upstream_lsf_queue,
         integrative_cpu = project.integrative_cpu,
         integrative_memory_gb = project.integrative_memory_gb,
         integrative_future_globals_gib = project.integrative_future_globals_gib,
-        integrative_lsf_queue = project.integrative_lsf_queue,
         cluster_cpu = project.cluster_cpu,
         cluster_memory_gb = project.cluster_memory_gb,
         cluster_future_globals_gib = project.cluster_future_globals_gib,
-        cluster_lsf_queue = project.cluster_lsf_queue,
     }
   }
 

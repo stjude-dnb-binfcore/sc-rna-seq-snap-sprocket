@@ -19,7 +19,6 @@ task run_upstream {
         Int cpu = 16
         Int memory_gb = 30
         Int future_globals_gib = 200
-        String lsf_queue = "standard"
     }
 
     command <<<
@@ -41,7 +40,6 @@ task run_upstream {
     runtime {
         cpu: cpu
         memory: "~{memory_gb} GB"
-        queue: lsf_queue
         container: container_image
     }
 }
@@ -58,7 +56,6 @@ task run_integrative {
         Int cpu = 10
         Int memory_gb = 96
         Int future_globals_gib = 200
-        String lsf_queue = "standard"
         File? wait_on
     }
 
@@ -82,7 +79,6 @@ task run_integrative {
     runtime {
         cpu: cpu
         memory: "~{memory_gb} GB"
-        queue: lsf_queue
         container: container_image
     }
 }
@@ -99,7 +95,6 @@ task run_cluster {
         Int cpu = 4
         Int memory_gb = 48
         Int future_globals_gib = 400
-        String lsf_queue = "standard"
         File? wait_on
     }
 
@@ -122,7 +117,6 @@ task run_cluster {
     runtime {
         cpu: cpu
         memory: "~{memory_gb} GB"
-        queue: lsf_queue
         container: container_image
     }
 }
@@ -139,7 +133,6 @@ task run_contamination_removal {
         Int cpu = 8
         Int memory_gb = 96
         Int future_globals_gib = 400
-        String lsf_queue = "standard"
         File? wait_on
     }
 
@@ -162,7 +155,6 @@ task run_contamination_removal {
     runtime {
         cpu: cpu
         memory: "~{memory_gb} GB"
-        queue: lsf_queue
         container: container_image
     }
 }
@@ -178,7 +170,6 @@ task run_cell_types {
         String notify_email
         Int cpu = 4
         Int memory_gb = 64
-        String lsf_queue = "standard"
         File? wait_on
     }
 
@@ -200,7 +191,6 @@ task run_cell_types {
     runtime {
         cpu: cpu
         memory: "~{memory_gb} GB"
-        queue: lsf_queue
         container: container_image
     }
 }
@@ -216,7 +206,6 @@ task run_clone_phylogeny {
         String notify_email
         Int cpu = 16
         Int memory_gb = 30
-        String lsf_queue = "standard"
         File? wait_on
     }
 
@@ -238,7 +227,6 @@ task run_clone_phylogeny {
     runtime {
         cpu: cpu
         memory: "~{memory_gb} GB"
-        queue: lsf_queue
         container: container_image
     }
 }
@@ -255,7 +243,6 @@ task run_de_go {
         Int cpu = 4
         Int memory_gb = 32
         Int future_globals_gib = 200
-        String lsf_queue = "standard"
         File? wait_on
     }
 
@@ -278,7 +265,6 @@ task run_de_go {
     runtime {
         cpu: cpu
         memory: "~{memory_gb} GB"
-        queue: lsf_queue
         container: container_image
     }
 }
@@ -294,7 +280,6 @@ task run_rshiny {
         String notify_email
         Int cpu = 4
         Int memory_gb = 30
-        String lsf_queue = "standard"
         File? wait_on
     }
 
@@ -316,7 +301,6 @@ task run_rshiny {
     runtime {
         cpu: cpu
         memory: "~{memory_gb} GB"
-        queue: lsf_queue
         container: container_image
     }
 }

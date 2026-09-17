@@ -39,8 +39,6 @@ workflow compute_snap_downstream_resources {
   Int de_go_memory_gb = 32 + (cell_scale - 1) * 8
   Int de_go_future_globals_gib = 200 + (cell_scale - 1) * 50
 
-  String default_queue = if integrative_memory_gb >= 512 then "large_mem" else "standard"
-
   String resolved_tier = if resource_tier == "auto" then (
     if scale <= 1 then "default" else if scale <= 2 then "large" else "xlarge"
   ) else resource_tier
@@ -71,6 +69,5 @@ workflow compute_snap_downstream_resources {
     Int out_de_go_memory_gb = de_go_memory_gb
     Int out_de_go_future_globals_gib = de_go_future_globals_gib
 
-    String out_lsf_queue = default_queue
   }
 }

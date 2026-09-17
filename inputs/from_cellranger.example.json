@@ -8,7 +8,5 @@
   "daedalus_from_cellranger.resource_estimator_container": "file:///absolute/path/to/r-base.sif",
   "daedalus_from_cellranger.project_root": "/absolute/path/to/isolated-daedalus-checkout",
   "daedalus_from_cellranger.downstream_container": "file:///absolute/path/to/rstudio-seurat.sif",
-  "daedalus_from_cellranger.notify_email": "user.name@stjude.org",
-  "daedalus_from_cellranger.upstream_lsf_queue": "standard",
-  "daedalus_from_cellranger.integrative_lsf_queue": "standard"
+  "daedalus_from_cellranger.notify_email": "user.name@stjude.org"
 }

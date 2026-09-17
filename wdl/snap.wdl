@@ -35,39 +35,31 @@ workflow sc_rna_seq_snap_downstream {
     Int upstream_cpu = 16
     Int upstream_memory_gb = 30
     Int upstream_future_globals_gib = 200
-    String upstream_lsf_queue = "standard"
 
     Int integrative_cpu = 10
     Int integrative_memory_gb = 96
     Int integrative_future_globals_gib = 200
-    String integrative_lsf_queue = "standard"
 
     Int cluster_cpu = 4
     Int cluster_memory_gb = 48
     Int cluster_future_globals_gib = 400
-    String cluster_lsf_queue = "standard"
 
     Int contamination_cpu = 8
     Int contamination_memory_gb = 96
     Int contamination_future_globals_gib = 400
-    String contamination_lsf_queue = "standard"
 
     Int cell_types_cpu = 4
     Int cell_types_memory_gb = 64
-    String cell_types_lsf_queue = "standard"
 
     Int clone_phylogeny_cpu = 16
     Int clone_phylogeny_memory_gb = 30
-    String clone_phylogeny_lsf_queue = "standard"
 
     Int de_go_cpu = 4
     Int de_go_memory_gb = 32
     Int de_go_future_globals_gib = 200
-    String de_go_lsf_queue = "standard"
 
     Int rshiny_cpu = 4
     Int rshiny_memory_gb = 30
-    String rshiny_lsf_queue = "standard"
   }
 
   Int total_estimated_cells = num_samples * estimated_cells_per_sample
@@ -81,7 +73,6 @@ workflow sc_rna_seq_snap_downstream {
         cpu = upstream_cpu,
         memory_gb = upstream_memory_gb,
         future_globals_gib = upstream_future_globals_gib,
-        lsf_queue = upstream_lsf_queue,
     }
     if (run_integrative) {
       call snap.run_integrative as integrative_y {
@@ -92,7 +83,6 @@ workflow sc_rna_seq_snap_downstream {
           cpu = integrative_cpu,
           memory_gb = integrative_memory_gb,
           future_globals_gib = integrative_future_globals_gib,
-          lsf_queue = integrative_lsf_queue,
           wait_on = upstream.done_flag,
       }
       if (run_cluster) {
@@ -104,7 +94,6 @@ workflow sc_rna_seq_snap_downstream {
             cpu = cluster_cpu,
             memory_gb = cluster_memory_gb,
             future_globals_gib = cluster_future_globals_gib,
-            lsf_queue = cluster_lsf_queue,
             wait_on = integrative_y.done_flag,
         }
         if (run_contamination_removal) {
@@ -116,7 +105,6 @@ workflow sc_rna_seq_snap_downstream {
               cpu = contamination_cpu,
               memory_gb = contamination_memory_gb,
               future_globals_gib = contamination_future_globals_gib,
-              lsf_queue = contamination_lsf_queue,
               wait_on = cluster_y_y.done_flag,
           }
           if (run_cell_types) {
@@ -127,7 +115,6 @@ workflow sc_rna_seq_snap_downstream {
                 notify_email = notify_email,
                 cpu = cell_types_cpu,
                 memory_gb = cell_types_memory_gb,
-                lsf_queue = cell_types_lsf_queue,
                 wait_on = contamination_y_y_y.done_flag,
             }
             if (run_clone_phylogeny) {
@@ -138,7 +125,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cell_types_y_y_y_y.done_flag,
               }
               if (run_de_go) {
@@ -150,7 +136,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_y_y_y_y_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -161,7 +146,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_y_y_y_y_y.done_flag,
                   }
                   
@@ -177,7 +161,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_y_y_y_y_y.done_flag,
                   }
                   
@@ -195,7 +178,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cell_types_y_y_y_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -206,7 +188,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_y_y_y_y_n.done_flag,
                   }
                   
@@ -222,7 +203,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cell_types_y_y_y_y.done_flag,
                   }
                   
@@ -240,7 +220,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = contamination_y_y_y.done_flag,
               }
               if (run_de_go) {
@@ -252,7 +231,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_y_y_y_y_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -263,7 +241,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_y_y_y_n_y.done_flag,
                   }
                   
@@ -279,7 +256,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_y_y_y_y_n.done_flag,
                   }
                   
@@ -297,7 +273,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = contamination_y_y_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -308,7 +283,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_y_y_y_n_n.done_flag,
                   }
                   
@@ -324,7 +298,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = contamination_y_y_y.done_flag,
                   }
                   
@@ -343,7 +316,6 @@ workflow sc_rna_seq_snap_downstream {
                 notify_email = notify_email,
                 cpu = cell_types_cpu,
                 memory_gb = cell_types_memory_gb,
-                lsf_queue = cell_types_lsf_queue,
                 wait_on = cluster_y_y.done_flag,
             }
             if (run_clone_phylogeny) {
@@ -354,7 +326,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cell_types_y_y_y_n.done_flag,
               }
               if (run_de_go) {
@@ -366,7 +337,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_y_y_y_n_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -377,7 +347,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_y_y_n_y_y.done_flag,
                   }
                   
@@ -393,7 +362,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_y_y_y_n_y.done_flag,
                   }
                   
@@ -411,7 +379,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cell_types_y_y_y_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -422,7 +389,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_y_y_n_y_n.done_flag,
                   }
                   
@@ -438,7 +404,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cell_types_y_y_y_n.done_flag,
                   }
                   
@@ -456,7 +421,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cluster_y_y.done_flag,
               }
               if (run_de_go) {
@@ -468,7 +432,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_y_y_y_n_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -479,7 +442,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_y_y_n_n_y.done_flag,
                   }
                   
@@ -495,7 +457,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_y_y_y_n_n.done_flag,
                   }
                   
@@ -513,7 +474,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cluster_y_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -524,7 +484,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_y_y_n_n_n.done_flag,
                   }
                   
@@ -540,7 +499,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cluster_y_y.done_flag,
                   }
                   
@@ -561,7 +519,6 @@ workflow sc_rna_seq_snap_downstream {
               cpu = contamination_cpu,
               memory_gb = contamination_memory_gb,
               future_globals_gib = contamination_future_globals_gib,
-              lsf_queue = contamination_lsf_queue,
               wait_on = integrative_y.done_flag,
           }
           if (run_cell_types) {
@@ -572,7 +529,6 @@ workflow sc_rna_seq_snap_downstream {
                 notify_email = notify_email,
                 cpu = cell_types_cpu,
                 memory_gb = cell_types_memory_gb,
-                lsf_queue = cell_types_lsf_queue,
                 wait_on = contamination_y_y_n.done_flag,
             }
             if (run_clone_phylogeny) {
@@ -583,7 +539,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cell_types_y_y_n_y.done_flag,
               }
               if (run_de_go) {
@@ -595,7 +550,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_y_y_n_y_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -606,7 +560,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_y_n_y_y_y.done_flag,
                   }
                   
@@ -622,7 +575,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_y_y_n_y_y.done_flag,
                   }
                   
@@ -640,7 +592,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cell_types_y_y_n_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -651,7 +602,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_y_n_y_y_n.done_flag,
                   }
                   
@@ -667,7 +617,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cell_types_y_y_n_y.done_flag,
                   }
                   
@@ -685,7 +634,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = contamination_y_y_n.done_flag,
               }
               if (run_de_go) {
@@ -697,7 +645,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_y_y_n_y_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -708,7 +655,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_y_n_y_n_y.done_flag,
                   }
                   
@@ -724,7 +670,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_y_y_n_y_n.done_flag,
                   }
                   
@@ -742,7 +687,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = contamination_y_y_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -753,7 +697,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_y_n_y_n_n.done_flag,
                   }
                   
@@ -769,7 +712,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = contamination_y_y_n.done_flag,
                   }
                   
@@ -788,7 +730,6 @@ workflow sc_rna_seq_snap_downstream {
                 notify_email = notify_email,
                 cpu = cell_types_cpu,
                 memory_gb = cell_types_memory_gb,
-                lsf_queue = cell_types_lsf_queue,
                 wait_on = integrative_y.done_flag,
             }
             if (run_clone_phylogeny) {
@@ -799,7 +740,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cell_types_y_y_n_n.done_flag,
               }
               if (run_de_go) {
@@ -811,7 +751,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_y_y_n_n_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -822,7 +761,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_y_n_n_y_y.done_flag,
                   }
                   
@@ -838,7 +776,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_y_y_n_n_y.done_flag,
                   }
                   
@@ -856,7 +793,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cell_types_y_y_n_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -867,7 +803,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_y_n_n_y_n.done_flag,
                   }
                   
@@ -883,7 +818,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cell_types_y_y_n_n.done_flag,
                   }
                   
@@ -901,7 +835,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = integrative_y.done_flag,
               }
               if (run_de_go) {
@@ -913,7 +846,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_y_y_n_n_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -924,7 +856,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_y_n_n_n_y.done_flag,
                   }
                   
@@ -940,7 +871,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_y_y_n_n_n.done_flag,
                   }
                   
@@ -958,7 +888,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = integrative_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -969,7 +898,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_y_n_n_n_n.done_flag,
                   }
                   
@@ -985,7 +913,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = integrative_y.done_flag,
                   }
                   
@@ -1007,7 +934,6 @@ workflow sc_rna_seq_snap_downstream {
             cpu = cluster_cpu,
             memory_gb = cluster_memory_gb,
             future_globals_gib = cluster_future_globals_gib,
-            lsf_queue = cluster_lsf_queue,
             wait_on = upstream.done_flag,
         }
         if (run_contamination_removal) {
@@ -1019,7 +945,6 @@ workflow sc_rna_seq_snap_downstream {
               cpu = contamination_cpu,
               memory_gb = contamination_memory_gb,
               future_globals_gib = contamination_future_globals_gib,
-              lsf_queue = contamination_lsf_queue,
               wait_on = cluster_y_n.done_flag,
           }
           if (run_cell_types) {
@@ -1030,7 +955,6 @@ workflow sc_rna_seq_snap_downstream {
                 notify_email = notify_email,
                 cpu = cell_types_cpu,
                 memory_gb = cell_types_memory_gb,
-                lsf_queue = cell_types_lsf_queue,
                 wait_on = contamination_y_n_y.done_flag,
             }
             if (run_clone_phylogeny) {
@@ -1041,7 +965,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cell_types_y_n_y_y.done_flag,
               }
               if (run_de_go) {
@@ -1053,7 +976,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_y_n_y_y_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -1064,7 +986,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_n_y_y_y_y.done_flag,
                   }
                   
@@ -1080,7 +1001,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_y_n_y_y_y.done_flag,
                   }
                   
@@ -1098,7 +1018,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cell_types_y_n_y_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -1109,7 +1028,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_n_y_y_y_n.done_flag,
                   }
                   
@@ -1125,7 +1043,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cell_types_y_n_y_y.done_flag,
                   }
                   
@@ -1143,7 +1060,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = contamination_y_n_y.done_flag,
               }
               if (run_de_go) {
@@ -1155,7 +1071,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_y_n_y_y_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -1166,7 +1081,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_n_y_y_n_y.done_flag,
                   }
                   
@@ -1182,7 +1096,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_y_n_y_y_n.done_flag,
                   }
                   
@@ -1200,7 +1113,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = contamination_y_n_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -1211,7 +1123,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_n_y_y_n_n.done_flag,
                   }
                   
@@ -1227,7 +1138,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = contamination_y_n_y.done_flag,
                   }
                   
@@ -1246,7 +1156,6 @@ workflow sc_rna_seq_snap_downstream {
                 notify_email = notify_email,
                 cpu = cell_types_cpu,
                 memory_gb = cell_types_memory_gb,
-                lsf_queue = cell_types_lsf_queue,
                 wait_on = cluster_y_n.done_flag,
             }
             if (run_clone_phylogeny) {
@@ -1257,7 +1166,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cell_types_y_n_y_n.done_flag,
               }
               if (run_de_go) {
@@ -1269,7 +1177,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_y_n_y_n_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -1280,7 +1187,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_n_y_n_y_y.done_flag,
                   }
                   
@@ -1296,7 +1202,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_y_n_y_n_y.done_flag,
                   }
                   
@@ -1314,7 +1219,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cell_types_y_n_y_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -1325,7 +1229,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_n_y_n_y_n.done_flag,
                   }
                   
@@ -1341,7 +1244,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cell_types_y_n_y_n.done_flag,
                   }
                   
@@ -1359,7 +1261,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cluster_y_n.done_flag,
               }
               if (run_de_go) {
@@ -1371,7 +1272,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_y_n_y_n_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -1382,7 +1282,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_n_y_n_n_y.done_flag,
                   }
                   
@@ -1398,7 +1297,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_y_n_y_n_n.done_flag,
                   }
                   
@@ -1416,7 +1314,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cluster_y_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -1427,7 +1324,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_n_y_n_n_n.done_flag,
                   }
                   
@@ -1443,7 +1339,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cluster_y_n.done_flag,
                   }
                   
@@ -1464,7 +1359,6 @@ workflow sc_rna_seq_snap_downstream {
               cpu = contamination_cpu,
               memory_gb = contamination_memory_gb,
               future_globals_gib = contamination_future_globals_gib,
-              lsf_queue = contamination_lsf_queue,
               wait_on = upstream.done_flag,
           }
           if (run_cell_types) {
@@ -1475,7 +1369,6 @@ workflow sc_rna_seq_snap_downstream {
                 notify_email = notify_email,
                 cpu = cell_types_cpu,
                 memory_gb = cell_types_memory_gb,
-                lsf_queue = cell_types_lsf_queue,
                 wait_on = contamination_y_n_n.done_flag,
             }
             if (run_clone_phylogeny) {
@@ -1486,7 +1379,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cell_types_y_n_n_y.done_flag,
               }
               if (run_de_go) {
@@ -1498,7 +1390,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_y_n_n_y_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -1509,7 +1400,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_n_n_y_y_y.done_flag,
                   }
                   
@@ -1525,7 +1415,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_y_n_n_y_y.done_flag,
                   }
                   
@@ -1543,7 +1432,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cell_types_y_n_n_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -1554,7 +1442,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_n_n_y_y_n.done_flag,
                   }
                   
@@ -1570,7 +1457,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cell_types_y_n_n_y.done_flag,
                   }
                   
@@ -1588,7 +1474,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = contamination_y_n_n.done_flag,
               }
               if (run_de_go) {
@@ -1600,7 +1485,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_y_n_n_y_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -1611,7 +1495,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_n_n_y_n_y.done_flag,
                   }
                   
@@ -1627,7 +1510,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_y_n_n_y_n.done_flag,
                   }
                   
@@ -1645,7 +1527,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = contamination_y_n_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -1656,7 +1537,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_n_n_y_n_n.done_flag,
                   }
                   
@@ -1672,7 +1552,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = contamination_y_n_n.done_flag,
                   }
                   
@@ -1691,7 +1570,6 @@ workflow sc_rna_seq_snap_downstream {
                 notify_email = notify_email,
                 cpu = cell_types_cpu,
                 memory_gb = cell_types_memory_gb,
-                lsf_queue = cell_types_lsf_queue,
                 wait_on = upstream.done_flag,
             }
             if (run_clone_phylogeny) {
@@ -1702,7 +1580,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cell_types_y_n_n_n.done_flag,
               }
               if (run_de_go) {
@@ -1714,7 +1591,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_y_n_n_n_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -1725,7 +1601,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_n_n_n_y_y.done_flag,
                   }
                   
@@ -1741,7 +1616,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_y_n_n_n_y.done_flag,
                   }
                   
@@ -1759,7 +1633,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cell_types_y_n_n_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -1770,7 +1643,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_n_n_n_y_n.done_flag,
                   }
                   
@@ -1786,7 +1658,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cell_types_y_n_n_n.done_flag,
                   }
                   
@@ -1804,7 +1675,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = upstream.done_flag,
               }
               if (run_de_go) {
@@ -1816,7 +1686,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_y_n_n_n_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -1827,7 +1696,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_n_n_n_n_y.done_flag,
                   }
                   
@@ -1843,7 +1711,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_y_n_n_n_n.done_flag,
                   }
                   
@@ -1861,7 +1728,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = upstream.done_flag,
                 }
                 if (run_rshiny) {
@@ -1872,7 +1738,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_y_n_n_n_n_n.done_flag,
                   }
                   
@@ -1888,7 +1753,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = upstream.done_flag,
                   }
                   
@@ -1911,7 +1775,6 @@ workflow sc_rna_seq_snap_downstream {
           cpu = integrative_cpu,
           memory_gb = integrative_memory_gb,
           future_globals_gib = integrative_future_globals_gib,
-          lsf_queue = integrative_lsf_queue,
       }
       if (run_cluster) {
         call snap.run_cluster as cluster_n_y {
@@ -1922,7 +1785,6 @@ workflow sc_rna_seq_snap_downstream {
             cpu = cluster_cpu,
             memory_gb = cluster_memory_gb,
             future_globals_gib = cluster_future_globals_gib,
-            lsf_queue = cluster_lsf_queue,
             wait_on = integrative_n.done_flag,
         }
         if (run_contamination_removal) {
@@ -1934,7 +1796,6 @@ workflow sc_rna_seq_snap_downstream {
               cpu = contamination_cpu,
               memory_gb = contamination_memory_gb,
               future_globals_gib = contamination_future_globals_gib,
-              lsf_queue = contamination_lsf_queue,
               wait_on = cluster_n_y.done_flag,
           }
           if (run_cell_types) {
@@ -1945,7 +1806,6 @@ workflow sc_rna_seq_snap_downstream {
                 notify_email = notify_email,
                 cpu = cell_types_cpu,
                 memory_gb = cell_types_memory_gb,
-                lsf_queue = cell_types_lsf_queue,
                 wait_on = contamination_n_y_y.done_flag,
             }
             if (run_clone_phylogeny) {
@@ -1956,7 +1816,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cell_types_n_y_y_y.done_flag,
               }
               if (run_de_go) {
@@ -1968,7 +1827,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_n_y_y_y_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -1979,7 +1837,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_y_y_y_y_y.done_flag,
                   }
                   
@@ -1995,7 +1852,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_n_y_y_y_y.done_flag,
                   }
                   
@@ -2013,7 +1869,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cell_types_n_y_y_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -2024,7 +1879,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_y_y_y_y_n.done_flag,
                   }
                   
@@ -2040,7 +1894,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cell_types_n_y_y_y.done_flag,
                   }
                   
@@ -2058,7 +1911,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = contamination_n_y_y.done_flag,
               }
               if (run_de_go) {
@@ -2070,7 +1922,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_n_y_y_y_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -2081,7 +1932,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_y_y_y_n_y.done_flag,
                   }
                   
@@ -2097,7 +1947,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_n_y_y_y_n.done_flag,
                   }
                   
@@ -2115,7 +1964,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = contamination_n_y_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -2126,7 +1974,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_y_y_y_n_n.done_flag,
                   }
                   
@@ -2142,7 +1989,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = contamination_n_y_y.done_flag,
                   }
                   
@@ -2161,7 +2007,6 @@ workflow sc_rna_seq_snap_downstream {
                 notify_email = notify_email,
                 cpu = cell_types_cpu,
                 memory_gb = cell_types_memory_gb,
-                lsf_queue = cell_types_lsf_queue,
                 wait_on = cluster_n_y.done_flag,
             }
             if (run_clone_phylogeny) {
@@ -2172,7 +2017,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cell_types_n_y_y_n.done_flag,
               }
               if (run_de_go) {
@@ -2184,7 +2028,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_n_y_y_n_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -2195,7 +2038,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_y_y_n_y_y.done_flag,
                   }
                   
@@ -2211,7 +2053,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_n_y_y_n_y.done_flag,
                   }
                   
@@ -2229,7 +2070,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cell_types_n_y_y_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -2240,7 +2080,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_y_y_n_y_n.done_flag,
                   }
                   
@@ -2256,7 +2095,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cell_types_n_y_y_n.done_flag,
                   }
                   
@@ -2274,7 +2112,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cluster_n_y.done_flag,
               }
               if (run_de_go) {
@@ -2286,7 +2123,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_n_y_y_n_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -2297,7 +2133,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_y_y_n_n_y.done_flag,
                   }
                   
@@ -2313,7 +2148,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_n_y_y_n_n.done_flag,
                   }
                   
@@ -2331,7 +2165,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cluster_n_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -2342,7 +2175,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_y_y_n_n_n.done_flag,
                   }
                   
@@ -2358,7 +2190,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cluster_n_y.done_flag,
                   }
                   
@@ -2379,7 +2210,6 @@ workflow sc_rna_seq_snap_downstream {
               cpu = contamination_cpu,
               memory_gb = contamination_memory_gb,
               future_globals_gib = contamination_future_globals_gib,
-              lsf_queue = contamination_lsf_queue,
               wait_on = integrative_n.done_flag,
           }
           if (run_cell_types) {
@@ -2390,7 +2220,6 @@ workflow sc_rna_seq_snap_downstream {
                 notify_email = notify_email,
                 cpu = cell_types_cpu,
                 memory_gb = cell_types_memory_gb,
-                lsf_queue = cell_types_lsf_queue,
                 wait_on = contamination_n_y_n.done_flag,
             }
             if (run_clone_phylogeny) {
@@ -2401,7 +2230,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cell_types_n_y_n_y.done_flag,
               }
               if (run_de_go) {
@@ -2413,7 +2241,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_n_y_n_y_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -2424,7 +2251,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_y_n_y_y_y.done_flag,
                   }
                   
@@ -2440,7 +2266,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_n_y_n_y_y.done_flag,
                   }
                   
@@ -2458,7 +2283,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cell_types_n_y_n_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -2469,7 +2293,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_y_n_y_y_n.done_flag,
                   }
                   
@@ -2485,7 +2308,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cell_types_n_y_n_y.done_flag,
                   }
                   
@@ -2503,7 +2325,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = contamination_n_y_n.done_flag,
               }
               if (run_de_go) {
@@ -2515,7 +2336,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_n_y_n_y_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -2526,7 +2346,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_y_n_y_n_y.done_flag,
                   }
                   
@@ -2542,7 +2361,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_n_y_n_y_n.done_flag,
                   }
                   
@@ -2560,7 +2378,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = contamination_n_y_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -2571,7 +2388,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_y_n_y_n_n.done_flag,
                   }
                   
@@ -2587,7 +2403,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = contamination_n_y_n.done_flag,
                   }
                   
@@ -2606,7 +2421,6 @@ workflow sc_rna_seq_snap_downstream {
                 notify_email = notify_email,
                 cpu = cell_types_cpu,
                 memory_gb = cell_types_memory_gb,
-                lsf_queue = cell_types_lsf_queue,
                 wait_on = integrative_n.done_flag,
             }
             if (run_clone_phylogeny) {
@@ -2617,7 +2431,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cell_types_n_y_n_n.done_flag,
               }
               if (run_de_go) {
@@ -2629,7 +2442,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_n_y_n_n_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -2640,7 +2452,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_y_n_n_y_y.done_flag,
                   }
                   
@@ -2656,7 +2467,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_n_y_n_n_y.done_flag,
                   }
                   
@@ -2674,7 +2484,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cell_types_n_y_n_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -2685,7 +2494,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_y_n_n_y_n.done_flag,
                   }
                   
@@ -2701,7 +2509,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cell_types_n_y_n_n.done_flag,
                   }
                   
@@ -2719,7 +2526,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = integrative_n.done_flag,
               }
               if (run_de_go) {
@@ -2731,7 +2537,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_n_y_n_n_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -2742,7 +2547,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_y_n_n_n_y.done_flag,
                   }
                   
@@ -2758,7 +2562,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_n_y_n_n_n.done_flag,
                   }
                   
@@ -2776,7 +2579,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = integrative_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -2787,7 +2589,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_y_n_n_n_n.done_flag,
                   }
                   
@@ -2803,7 +2604,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = integrative_n.done_flag,
                   }
                   
@@ -2825,7 +2625,6 @@ workflow sc_rna_seq_snap_downstream {
             cpu = cluster_cpu,
             memory_gb = cluster_memory_gb,
             future_globals_gib = cluster_future_globals_gib,
-            lsf_queue = cluster_lsf_queue,
         }
         if (run_contamination_removal) {
           call snap.run_contamination_removal as contamination_n_n_y {
@@ -2836,7 +2635,6 @@ workflow sc_rna_seq_snap_downstream {
               cpu = contamination_cpu,
               memory_gb = contamination_memory_gb,
               future_globals_gib = contamination_future_globals_gib,
-              lsf_queue = contamination_lsf_queue,
               wait_on = cluster_n_n.done_flag,
           }
           if (run_cell_types) {
@@ -2847,7 +2645,6 @@ workflow sc_rna_seq_snap_downstream {
                 notify_email = notify_email,
                 cpu = cell_types_cpu,
                 memory_gb = cell_types_memory_gb,
-                lsf_queue = cell_types_lsf_queue,
                 wait_on = contamination_n_n_y.done_flag,
             }
             if (run_clone_phylogeny) {
@@ -2858,7 +2655,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cell_types_n_n_y_y.done_flag,
               }
               if (run_de_go) {
@@ -2870,7 +2666,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_n_n_y_y_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -2881,7 +2676,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_n_y_y_y_y.done_flag,
                   }
                   
@@ -2897,7 +2691,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_n_n_y_y_y.done_flag,
                   }
                   
@@ -2915,7 +2708,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cell_types_n_n_y_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -2926,7 +2718,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_n_y_y_y_n.done_flag,
                   }
                   
@@ -2942,7 +2733,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cell_types_n_n_y_y.done_flag,
                   }
                   
@@ -2960,7 +2750,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = contamination_n_n_y.done_flag,
               }
               if (run_de_go) {
@@ -2972,7 +2761,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_n_n_y_y_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -2983,7 +2771,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_n_y_y_n_y.done_flag,
                   }
                   
@@ -2999,7 +2786,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_n_n_y_y_n.done_flag,
                   }
                   
@@ -3017,7 +2803,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = contamination_n_n_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -3028,7 +2813,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_n_y_y_n_n.done_flag,
                   }
                   
@@ -3044,7 +2828,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = contamination_n_n_y.done_flag,
                   }
                   
@@ -3063,7 +2846,6 @@ workflow sc_rna_seq_snap_downstream {
                 notify_email = notify_email,
                 cpu = cell_types_cpu,
                 memory_gb = cell_types_memory_gb,
-                lsf_queue = cell_types_lsf_queue,
                 wait_on = cluster_n_n.done_flag,
             }
             if (run_clone_phylogeny) {
@@ -3074,7 +2856,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cell_types_n_n_y_n.done_flag,
               }
               if (run_de_go) {
@@ -3086,7 +2867,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_n_n_y_n_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -3097,7 +2877,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_n_y_n_y_y.done_flag,
                   }
                   
@@ -3113,7 +2892,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_n_n_y_n_y.done_flag,
                   }
                   
@@ -3131,7 +2909,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cell_types_n_n_y_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -3142,7 +2919,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_n_y_n_y_n.done_flag,
                   }
                   
@@ -3158,7 +2934,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cell_types_n_n_y_n.done_flag,
                   }
                   
@@ -3176,7 +2951,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cluster_n_n.done_flag,
               }
               if (run_de_go) {
@@ -3188,7 +2962,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_n_n_y_n_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -3199,7 +2972,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_n_y_n_n_y.done_flag,
                   }
                   
@@ -3215,7 +2987,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_n_n_y_n_n.done_flag,
                   }
                   
@@ -3233,7 +3004,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cluster_n_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -3244,7 +3014,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_n_y_n_n_n.done_flag,
                   }
                   
@@ -3260,7 +3029,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cluster_n_n.done_flag,
                   }
                   
@@ -3281,7 +3049,6 @@ workflow sc_rna_seq_snap_downstream {
               cpu = contamination_cpu,
               memory_gb = contamination_memory_gb,
               future_globals_gib = contamination_future_globals_gib,
-              lsf_queue = contamination_lsf_queue,
           }
           if (run_cell_types) {
             call snap.run_cell_types as cell_types_n_n_n_y {
@@ -3291,7 +3058,6 @@ workflow sc_rna_seq_snap_downstream {
                 notify_email = notify_email,
                 cpu = cell_types_cpu,
                 memory_gb = cell_types_memory_gb,
-                lsf_queue = cell_types_lsf_queue,
                 wait_on = contamination_n_n_n.done_flag,
             }
             if (run_clone_phylogeny) {
@@ -3302,7 +3068,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cell_types_n_n_n_y.done_flag,
               }
               if (run_de_go) {
@@ -3314,7 +3079,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_n_n_n_y_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -3325,7 +3089,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_n_n_y_y_y.done_flag,
                   }
                   
@@ -3341,7 +3104,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_n_n_n_y_y.done_flag,
                   }
                   
@@ -3359,7 +3121,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cell_types_n_n_n_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -3370,7 +3131,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_n_n_y_y_n.done_flag,
                   }
                   
@@ -3386,7 +3146,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cell_types_n_n_n_y.done_flag,
                   }
                   
@@ -3404,7 +3163,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = contamination_n_n_n.done_flag,
               }
               if (run_de_go) {
@@ -3416,7 +3174,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_n_n_n_y_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -3427,7 +3184,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_n_n_y_n_y.done_flag,
                   }
                   
@@ -3443,7 +3199,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_n_n_n_y_n.done_flag,
                   }
                   
@@ -3461,7 +3216,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = contamination_n_n_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -3472,7 +3226,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_n_n_y_n_n.done_flag,
                   }
                   
@@ -3488,7 +3241,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = contamination_n_n_n.done_flag,
                   }
                   
@@ -3507,7 +3259,6 @@ workflow sc_rna_seq_snap_downstream {
                 notify_email = notify_email,
                 cpu = cell_types_cpu,
                 memory_gb = cell_types_memory_gb,
-                lsf_queue = cell_types_lsf_queue,
             }
             if (run_clone_phylogeny) {
               call snap.run_clone_phylogeny as clone_phylogeny_n_n_n_n_y {
@@ -3517,7 +3268,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
                   wait_on = cell_types_n_n_n_n.done_flag,
               }
               if (run_de_go) {
@@ -3529,7 +3279,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_n_n_n_n_y.done_flag,
                 }
                 if (run_rshiny) {
@@ -3540,7 +3289,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_n_n_n_y_y.done_flag,
                   }
                   
@@ -3556,7 +3304,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_n_n_n_n_y.done_flag,
                   }
                   
@@ -3574,7 +3321,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = cell_types_n_n_n_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -3585,7 +3331,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_n_n_n_y_n.done_flag,
                   }
                   
@@ -3601,7 +3346,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = cell_types_n_n_n_n.done_flag,
                   }
                   
@@ -3619,7 +3363,6 @@ workflow sc_rna_seq_snap_downstream {
                   notify_email = notify_email,
                   cpu = clone_phylogeny_cpu,
                   memory_gb = clone_phylogeny_memory_gb,
-                  lsf_queue = clone_phylogeny_lsf_queue,
               }
               if (run_de_go) {
                 call snap.run_de_go as de_go_n_n_n_n_n_y {
@@ -3630,7 +3373,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                     wait_on = clone_phylogeny_n_n_n_n_n.done_flag,
                 }
                 if (run_rshiny) {
@@ -3641,7 +3383,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_n_n_n_n_y.done_flag,
                   }
                   
@@ -3657,7 +3398,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = clone_phylogeny_n_n_n_n_n.done_flag,
                   }
                   
@@ -3675,7 +3415,6 @@ workflow sc_rna_seq_snap_downstream {
                     cpu = de_go_cpu,
                     memory_gb = de_go_memory_gb,
                     future_globals_gib = de_go_future_globals_gib,
-                    lsf_queue = de_go_lsf_queue,
                 }
                 if (run_rshiny) {
                   call snap.run_rshiny as rshiny_n_n_n_n_n_n_y {
@@ -3685,7 +3424,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                       wait_on = de_go_n_n_n_n_n_n.done_flag,
                   }
                   
@@ -3701,7 +3439,6 @@ workflow sc_rna_seq_snap_downstream {
                       notify_email = notify_email,
                       cpu = rshiny_cpu,
                       memory_gb = rshiny_memory_gb,
-                      lsf_queue = rshiny_lsf_queue,
                   }
                   
                 } else {

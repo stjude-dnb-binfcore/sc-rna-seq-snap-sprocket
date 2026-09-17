@@ -253,8 +253,7 @@ compute_resources <- function(num_samples, estimated_cells_per_sample, total_cel
     contamination_future_globals_gib = 400L + (cell_scale - 1L) * 100L,
     cell_types_memory_gb = 64L + (cell_scale - 1L) * 16L,
     de_go_memory_gb = 32L + (cell_scale - 1L) * 8L,
-    de_go_future_globals_gib = 200L + (cell_scale - 1L) * 50L,
-    lsf_queue = if ((96L + (cell_scale - 1L) * 24L) >= 512L) "large_mem" else "standard"
+    de_go_future_globals_gib = 200L + (cell_scale - 1L) * 50L
   )
 
   for (key in grep("_memory_gb$", names(res), value = TRUE)) {
@@ -264,7 +263,6 @@ compute_resources <- function(num_samples, estimated_cells_per_sample, total_cel
 }
 
 build_sprocket_inputs <- function(snap_root, container_image, notify_email, res, toggles) {
-  q <- res$lsf_queue
   list(
     `sc_rna_seq_snap_downstream.snap_root` = snap_root,
     `sc_rna_seq_snap_downstream.container_image` = sprocket_container_uri(container_image),
@@ -282,23 +280,17 @@ build_sprocket_inputs <- function(snap_root, container_image, notify_email, res,
     `sc_rna_seq_snap_downstream.upstream_cpu` = res$upstream_cpu,
     `sc_rna_seq_snap_downstream.upstream_memory_gb` = res$upstream_memory_gb,
     `sc_rna_seq_snap_downstream.upstream_future_globals_gib` = res$upstream_future_globals_gib,
-    `sc_rna_seq_snap_downstream.upstream_lsf_queue` = q,
     `sc_rna_seq_snap_downstream.integrative_cpu` = res$integrative_cpu,
     `sc_rna_seq_snap_downstream.integrative_memory_gb` = res$integrative_memory_gb,
     `sc_rna_seq_snap_downstream.integrative_future_globals_gib` = res$integrative_future_globals_gib,
-    `sc_rna_seq_snap_downstream.integrative_lsf_queue` = q,
     `sc_rna_seq_snap_downstream.cluster_cpu` = res$cluster_cpu,
     `sc_rna_seq_snap_downstream.cluster_memory_gb` = res$cluster_memory_gb,
     `sc_rna_seq_snap_downstream.cluster_future_globals_gib` = res$cluster_future_globals_gib,
-    `sc_rna_seq_snap_downstream.cluster_lsf_queue` = q,
     `sc_rna_seq_snap_downstream.contamination_memory_gb` = res$contamination_memory_gb,
     `sc_rna_seq_snap_downstream.contamination_future_globals_gib` = res$contamination_future_globals_gib,
-    `sc_rna_seq_snap_downstream.contamination_lsf_queue` = q,
     `sc_rna_seq_snap_downstream.cell_types_memory_gb` = res$cell_types_memory_gb,
-    `sc_rna_seq_snap_downstream.cell_types_lsf_queue` = q,
     `sc_rna_seq_snap_downstream.de_go_memory_gb` = res$de_go_memory_gb,
-    `sc_rna_seq_snap_downstream.de_go_future_globals_gib` = res$de_go_future_globals_gib,
-    `sc_rna_seq_snap_downstream.de_go_lsf_queue` = q
+    `sc_rna_seq_snap_downstream.de_go_future_globals_gib` = res$de_go_future_globals_gib
   )
 }
 

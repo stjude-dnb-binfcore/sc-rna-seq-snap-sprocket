@@ -18,8 +18,6 @@ workflow daedalus_from_cellranger {
         String notify_email
         Int resource_estimator_cpu = 1
         Int resource_estimator_memory_gb = 1
-        String upstream_lsf_queue = "standard"
-        String integrative_lsf_queue = "standard"
     }
 
     scatter (cellranger_input in cellranger_inputs) {
@@ -75,7 +73,6 @@ workflow daedalus_from_cellranger {
         cpu = estimate_downstream_resources.resources.upstream_cpu,
         memory_gb = estimate_downstream_resources.resources.upstream_memory_gb,
         future_globals_gib = estimate_downstream_resources.resources.upstream_future_globals_gib,
-        lsf_queue = upstream_lsf_queue,
     }
 
     call post_cellranger.run_integrative as integrative after upstream { input:
@@ -85,7 +82,6 @@ workflow daedalus_from_cellranger {
         cpu = estimate_downstream_resources.resources.integrative_cpu,
         memory_gb = estimate_downstream_resources.resources.integrative_memory_gb,
         future_globals_gib = estimate_downstream_resources.resources.integrative_future_globals_gib,
-        lsf_queue = integrative_lsf_queue,
     }
 
     output {

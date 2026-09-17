@@ -25,32 +25,24 @@ workflow sc_rna_seq {
         Int upstream_cpu = 16
         Int upstream_memory_gb = 30
         Int upstream_future_globals_gib = 200
-        String upstream_lsf_queue = "standard"
         Int integrative_cpu = 10
         Int integrative_memory_gb = 96
         Int integrative_future_globals_gib = 200
-        String integrative_lsf_queue = "standard"
         Int cluster_cpu = 4
         Int cluster_memory_gb = 48
         Int cluster_future_globals_gib = 400
-        String cluster_lsf_queue = "standard"
         Int contamination_cpu = 8
         Int contamination_memory_gb = 96
         Int contamination_future_globals_gib = 400
-        String contamination_lsf_queue = "standard"
         Int cell_types_cpu = 4
         Int cell_types_memory_gb = 64
-        String cell_types_lsf_queue = "standard"
         Int clone_phylogeny_cpu = 16
         Int clone_phylogeny_memory_gb = 30
-        String clone_phylogeny_lsf_queue = "standard"
         Int de_go_cpu = 4
         Int de_go_memory_gb = 32
         Int de_go_future_globals_gib = 200
-        String de_go_lsf_queue = "standard"
         Int rshiny_cpu = 4
         Int rshiny_memory_gb = 30
-        String rshiny_lsf_queue = "standard"
     }
 
     Int total_estimated_cells = num_samples * estimated_cells_per_sample
@@ -62,7 +54,6 @@ workflow sc_rna_seq {
         cpu = upstream_cpu,
         memory_gb = upstream_memory_gb,
         future_globals_gib = upstream_future_globals_gib,
-        lsf_queue = upstream_lsf_queue,
     }
 
     call post_cellranger.run_integrative as integrative { input:
@@ -72,7 +63,6 @@ workflow sc_rna_seq {
         cpu = integrative_cpu,
         memory_gb = integrative_memory_gb,
         future_globals_gib = integrative_future_globals_gib,
-        lsf_queue = integrative_lsf_queue,
         wait_on = upstream.done_flag,
     }
 
@@ -83,7 +73,6 @@ workflow sc_rna_seq {
         cpu = cluster_cpu,
         memory_gb = cluster_memory_gb,
         future_globals_gib = cluster_future_globals_gib,
-        lsf_queue = cluster_lsf_queue,
         wait_on = integrative.done_flag,
     }
 
@@ -94,7 +83,6 @@ workflow sc_rna_seq {
         cpu = contamination_cpu,
         memory_gb = contamination_memory_gb,
         future_globals_gib = contamination_future_globals_gib,
-        lsf_queue = contamination_lsf_queue,
         wait_on = cluster.done_flag,
     }
 
@@ -104,7 +92,6 @@ workflow sc_rna_seq {
         notify_email = notify_email,
         cpu = cell_types_cpu,
         memory_gb = cell_types_memory_gb,
-        lsf_queue = cell_types_lsf_queue,
         wait_on = contamination.done_flag,
     }
 
@@ -114,7 +101,6 @@ workflow sc_rna_seq {
         notify_email = notify_email,
         cpu = clone_phylogeny_cpu,
         memory_gb = clone_phylogeny_memory_gb,
-        lsf_queue = clone_phylogeny_lsf_queue,
         wait_on = cell_types.done_flag,
     }
     call post_cellranger.run_de_go as de_go { input:
@@ -124,7 +110,6 @@ workflow sc_rna_seq {
         cpu = de_go_cpu,
         memory_gb = de_go_memory_gb,
         future_globals_gib = de_go_future_globals_gib,
-        lsf_queue = de_go_lsf_queue,
         wait_on = clone_phylogeny.done_flag,
     }
 
@@ -134,7 +119,6 @@ workflow sc_rna_seq {
         notify_email = notify_email,
         cpu = rshiny_cpu,
         memory_gb = rshiny_memory_gb,
-        lsf_queue = rshiny_lsf_queue,
         wait_on = de_go.done_flag,
     }
 
