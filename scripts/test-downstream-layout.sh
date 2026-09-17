@@ -16,11 +16,13 @@ required=(
   inputs/sprocket_inputs.json
   scripts/estimate-snap-downstream-resources.R
   scripts/launch-snap-sprocket.sh
-  workflows/preprocessing.wdl
+  workflows/daedalus_processing.wdl
+  workflows/daedalus_from_cellranger.wdl
   tasks/preprocessing_types.wdl
   tasks/pre_cellranger.wdl
   tasks/pre_cellranger.yaml
   inputs/preprocessing.example.json
+  inputs/from_cellranger.example.json
   test/fixtures/preprocessing/cells-1750-quoted.csv
   test/fixtures/preprocessing/missing-cell-count.csv
   test/fixtures/preprocessing/not-a-number.csv

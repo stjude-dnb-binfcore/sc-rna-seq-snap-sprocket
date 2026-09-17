@@ -15,7 +15,7 @@ Before launching downstream:
 
 ## Preprocessing-only workflow
 
-`workflows/preprocessing.wdl` runs FastQC on R2 reads, gathers reports with
+`workflows/daedalus_processing.wdl` runs FastQC on R2 reads, gathers reports with
 MultiQC, runs one local Cell Ranger process per normalized sample, and estimates
 resources for later upstream and integrative analyses. It does not import or
 call downstream SNAP workflows.
@@ -26,10 +26,10 @@ submit directly with Sprocket from the repository root:
 
 ```bash
 cp inputs/preprocessing.example.json inputs/preprocessing.json
-sprocket check workflows/preprocessing.wdl
-sprocket validate workflows/preprocessing.wdl @inputs/preprocessing.json \
+sprocket check workflows/daedalus_processing.wdl
+sprocket validate workflows/daedalus_processing.wdl @inputs/preprocessing.json \
   --config sprocket.toml --skip-config-search
-sprocket run workflows/preprocessing.wdl @inputs/preprocessing.json \
+sprocket run workflows/daedalus_processing.wdl @inputs/preprocessing.json \
   --config sprocket.toml --skip-config-search --output-dir /absolute/path/to/output
 ```
 
@@ -53,7 +53,7 @@ WDL task parses each Cell Ranger CSV before the resource task calculates the
 downstream resource struct; preprocessing requires no helper scripts.
 
 To resume from completed Cell Ranger runs, use the separate
-`workflows/from_cellranger.wdl` entry point. Each input names a sample and its
+`workflows/daedalus_from_cellranger.wdl` entry point. Each input names a sample and its
 Cell Ranger `outs` directory; the workflow validates unique IDs and required
 Cell Ranger artifacts, derives `metrics_summary.csv`, and emits the same typed
 Cell Ranger and downstream resource handoff without requiring FASTQs, a genome
@@ -61,9 +61,9 @@ reference, FastQC, MultiQC, or Cell Ranger:
 
 ```bash
 cp inputs/from_cellranger.example.json inputs/from_cellranger.json
-sprocket validate workflows/from_cellranger.wdl @inputs/from_cellranger.json \
+sprocket validate workflows/daedalus_from_cellranger.wdl @inputs/from_cellranger.json \
   --config sprocket.toml --skip-config-search
-sprocket run workflows/from_cellranger.wdl @inputs/from_cellranger.json \
+sprocket run workflows/daedalus_from_cellranger.wdl @inputs/from_cellranger.json \
   --config sprocket.toml --skip-config-search --output-dir /absolute/path/to/output
 ```
 
