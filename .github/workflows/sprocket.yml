@@ -3,8 +3,9 @@ on:
   pull_request:
     paths:
       - ".github/workflows/sprocket.yml"
-      - ".sprocketignore"
       - "sprocket.local.toml"
+      - "launch-snap-downstream.sh"
+      - "scripts/**"
       - "tasks/**"
       - "test/fixtures/**"
       - "workflows/**"
@@ -13,8 +14,9 @@ on:
       - main
     paths:
       - ".github/workflows/sprocket.yml"
-      - ".sprocketignore"
       - "sprocket.local.toml"
+      - "launch-snap-downstream.sh"
+      - "scripts/**"
       - "tasks/**"
       - "test/fixtures/**"
       - "workflows/**"

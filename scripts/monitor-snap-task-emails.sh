@@ -32,7 +32,7 @@ done
 }
 
 NOTIFY_SCRIPT="${SNAP_ROOT}/scripts/snap-notify-email.sh"
-RUNS_ROOT="${SNAP_ROOT}/out/runs/sc_rna_seq_snap_downstream"
+RUNS_ROOT="${SNAP_ROOT}/out/runs/daedalus_from_cellranger"
 STATE_DIR="${SNAP_ROOT}/inputs"
 
 send_module_email() {
@@ -52,7 +52,7 @@ normalize_module() {
     clone_phylogeny*) echo "clone_phylogeny" ;;
     de_go*) echo "de_go" ;;
     rshiny*) echo "rshiny" ;;
-    *) echo "${alias}" ;;
+    *) return 1 ;;
   esac
 }
 
@@ -133,7 +133,9 @@ while kill -0 "${WATCH_PID}" 2>/dev/null; do
     for call_path in "${calls_dir}"/*/; do
       [[ -d "${call_path}" ]] || continue
       alias="$(basename "${call_path}")"
-      module="$(normalize_module "${alias}")"
+      if ! module="$(normalize_module "${alias}")"; then
+        continue
+      fi
       label="$(module_label "${module}")"
       attempt_dir="${call_path}attempts/0"
       job_id_file="${attempt_dir}/job_id"
@@ -181,7 +183,9 @@ if calls_dir="$(resolve_calls_dir 2>/dev/null)"; then
   for call_path in "${calls_dir}"/*/; do
     [[ -d "${call_path}" ]] || continue
     alias="$(basename "${call_path}")"
-    module="$(normalize_module "${alias}")"
+    if ! module="$(normalize_module "${alias}")"; then
+      continue
+    fi
     label="$(module_label "${module}")"
     attempt_dir="${call_path}attempts/0"
     job_id_file="${attempt_dir}/job_id"

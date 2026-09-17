@@ -3,7 +3,7 @@ version 1.3
 # Assumes FastQC and Cell Ranger have already completed.
 #
 # Container execution is handled by Sprocket (lsf_apptainer backend) via
-# runtime.container — do not call singularity/apptainer in command blocks.
+# requirements.container — do not call singularity/apptainer in command blocks.
 # Per-module email: LSF bsub -B/-N/-u CONTACT_EMAIL (inputs/sprocket.generated.toml).
 # Workflow email: scripts/snap-notify-email.sh from launch-snap-sprocket.sh.
 task run_upstream {
@@ -36,7 +36,7 @@ task run_upstream {
         File done_flag = "upstream.done"
     }
 
-    runtime {
+    requirements {
         cpu: cpu
         memory: "~{memory_gb} GB"
         container: container_image
@@ -55,7 +55,6 @@ task run_cluster {
         Int cpu = 4
         Int memory_gb = 48
         Int future_globals_gib = 400
-        File? wait_on
     }
 
     command <<<
@@ -64,7 +63,6 @@ task run_cluster {
         echo "Module: cluster  LSF mail: ~{notify_email}"
         export SNAP_CONFIG_FILE="~{snap_root}/inputs/project_parameters.generated.yaml"
         export FUTURE_GLOBALS_MAXSIZE_GIB="~{future_globals_gib}"
-        if [ -n "~{wait_on}" ]; then echo "Previous step: ~{wait_on}"; fi
         cd "~{snap_root}/analyses/cluster-cell-calling"
         bash run-cluster-cell-calling.sh
         echo "done" > "${TASK_DIR}/cluster.done"
@@ -74,7 +72,7 @@ task run_cluster {
         File done_flag = "cluster.done"
     }
 
-    runtime {
+    requirements {
         cpu: cpu
         memory: "~{memory_gb} GB"
         container: container_image
@@ -92,7 +90,6 @@ task run_cell_types {
         String notify_email
         Int cpu = 4
         Int memory_gb = 64
-        File? wait_on
     }
 
     command <<<
@@ -100,7 +97,6 @@ task run_cell_types {
         TASK_DIR="$(pwd)"
         echo "Module: cell_types  LSF mail: ~{notify_email}"
         export SNAP_CONFIG_FILE="~{snap_root}/inputs/project_parameters.generated.yaml"
-        if [ -n "~{wait_on}" ]; then echo "Previous step: ~{wait_on}"; fi
         cd "~{snap_root}/analyses/cell-types-annotation"
         bash run-cell-types-annotation.sh
         echo "done" > "${TASK_DIR}/cell_types.done"
@@ -110,7 +106,7 @@ task run_cell_types {
         File done_flag = "cell_types.done"
     }
 
-    runtime {
+    requirements {
         cpu: cpu
         memory: "~{memory_gb} GB"
         container: container_image
@@ -128,7 +124,6 @@ task run_rshiny {
         String notify_email
         Int cpu = 4
         Int memory_gb = 30
-        File? wait_on
     }
 
     command <<<
@@ -136,7 +131,6 @@ task run_rshiny {
         TASK_DIR="$(pwd)"
         echo "Module: rshiny  LSF mail: ~{notify_email}"
         export SNAP_CONFIG_FILE="~{snap_root}/inputs/project_parameters.generated.yaml"
-        if [ -n "~{wait_on}" ]; then echo "Previous step: ~{wait_on}"; fi
         cd "~{snap_root}/analyses/rshiny-app"
         bash run-rshiny-app.sh
         echo "done" > "${TASK_DIR}/rshiny.done"
@@ -146,7 +140,7 @@ task run_rshiny {
         File done_flag = "rshiny.done"
     }
 
-    runtime {
+    requirements {
         cpu: cpu
         memory: "~{memory_gb} GB"
         container: container_image

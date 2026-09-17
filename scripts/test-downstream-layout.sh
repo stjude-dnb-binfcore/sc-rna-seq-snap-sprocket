@@ -8,33 +8,55 @@ echo "==> Snap root: ${SNAP_ROOT}"
 echo
 
 required=(
-  wdl/snap.wdl
-  wdl/tasks.wdl
-  wdl/resources.wdl
-  wdl/snap_multi_project.wdl
   sprocket.toml
-  inputs/sprocket_inputs.json
   scripts/estimate-snap-downstream-resources.R
   scripts/launch-snap-sprocket.sh
-  workflows/daedalus_processing.wdl
   workflows/daedalus_from_cellranger.wdl
+  tasks/post_cellranger_optional.wdl
+  tasks/post_cellranger_required.wdl
   tasks/preprocessing_types.wdl
   tasks/pre_cellranger.wdl
   tasks/pre_cellranger.yaml
-  inputs/preprocessing.example.json
-  inputs/from_cellranger.example.json
   test/fixtures/preprocessing/cells-1750-quoted.csv
   test/fixtures/preprocessing/missing-cell-count.csv
   test/fixtures/preprocessing/not-a-number.csv
 )
 
 for f in "${required[@]}"; do
-  [[ -e "${SNAP_ROOT}/${f}" ]] && echo "OK      ${f}" || { echo "MISSING: ${f}"; exit 1; }
+  if [[ -e "${SNAP_ROOT}/${f}" ]]; then
+    echo "OK      ${f}"
+  else
+    echo "MISSING: ${f}"
+    exit 1
+  fi
 done
 
 echo
 echo "==> Downstream modules in workflow"
-grep -E "^task run_" "${SNAP_ROOT}/wdl/tasks.wdl" | sed 's/task /  /'
+grep -hE "^task run_" \
+  "${SNAP_ROOT}/tasks/post_cellranger_required.wdl" \
+  "${SNAP_ROOT}/tasks/post_cellranger_optional.wdl" \
+  | sed 's/task /  /'
+
+echo
+echo "==> Static launcher contract"
+if ! grep -Fq 'WORKFLOW_NAME="daedalus_from_cellranger"' "${SNAP_ROOT}/scripts/launch-snap-sprocket.sh"; then
+  echo "Launcher does not select the static daedalus_from_cellranger workflow" >&2
+  exit 1
+fi
+if grep -Fq 'NO_CALL_CACHE' "${SNAP_ROOT}/scripts/launch-snap-sprocket.sh"; then
+  echo "Call caching is still conditional" >&2
+  exit 1
+fi
+if ! grep -Eq '^SPROCKET_RUN_FLAGS=.*--no-call-cache' "${SNAP_ROOT}/scripts/launch-snap-sprocket.sh"; then
+  echo "Launcher does not disable Sprocket call caching" >&2
+  exit 1
+fi
+if grep -Fq 'generate-snap-wdl.R' "${SNAP_ROOT}/scripts/launch-snap-sprocket.sh"; then
+  echo "Launcher still generates WDL" >&2
+  exit 1
+fi
+echo "OK      launcher uses static WDL with call caching disabled"
 
 echo
 echo "==> Resource scaling preview (baseline 8 x 50k cells)"
@@ -46,7 +68,13 @@ for samples in 8 16 24; do
   cs=$(( (total + base - 1) / base )); cs=$(( cs < 1 ? 1 : cs ))
   ss=$(( (samples + 7) / 8 )); ss=$(( ss < 1 ? 1 : ss ))
   scale=$(( ss > cs ? ss : cs ))
-  tier=$([[ $scale -le 1 ]] && echo default || ([[ $scale -le 2 ]] && echo large || echo xlarge))
+  if [[ $scale -le 1 ]]; then
+    tier=default
+  elif [[ $scale -le 2 ]]; then
+    tier=large
+  else
+    tier=xlarge
+  fi
   up=$((30 + (cs - 1) * 10))
   integ=$((96 + (cs - 1) * 24))
   clust=$((48 + (cs - 1) * 16))

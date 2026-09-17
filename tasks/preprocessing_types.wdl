@@ -1,20 +1,8 @@
 version 1.3
 
-struct SampleInput {
-    String id
-    Array[Directory]+ fastq_dirs
-    Array[String]+ sample_names
-}
-
 struct ExistingCellRangerInput {
     String id
     Directory count_output
-}
-
-struct FastQcOutput {
-    String sample_id
-    Array[File] html_reports
-    Array[File] zip_reports
 }
 
 struct CellRangerOutput {
@@ -31,4 +19,19 @@ struct DownstreamResources {
     Int integrative_cpu
     Int integrative_memory_gb
     Int integrative_future_globals_gib
+    Int cluster_cpu
+    Int cluster_memory_gb
+    Int cluster_future_globals_gib
+    Int contamination_cpu
+    Int contamination_memory_gb
+    Int contamination_future_globals_gib
+    Int cell_types_cpu
+    Int cell_types_memory_gb
+    Int clone_phylogeny_cpu
+    Int clone_phylogeny_memory_gb
+    Int de_go_cpu
+    Int de_go_memory_gb
+    Int de_go_future_globals_gib
+    Int rshiny_cpu
+    Int rshiny_memory_gb
 }
