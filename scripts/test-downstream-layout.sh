@@ -32,6 +32,27 @@ for f in "${required[@]}"; do
   [[ -e "${SNAP_ROOT}/${f}" ]] && echo "OK      ${f}" || { echo "MISSING: ${f}"; exit 1; }
 done
 
+resume_workflow="${SNAP_ROOT}/workflows/daedalus_from_cellranger.wdl"
+post_cellranger_tasks="${SNAP_ROOT}/tasks/post_cellranger.wdl"
+parallel_plan="${SNAP_ROOT}/scripts/snap_parallel_plan.R"
+grep -qF 'import "../tasks/post_cellranger.wdl" as post_cellranger' "${resume_workflow}"
+grep -qF 'call post_cellranger.run_upstream as upstream' "${resume_workflow}"
+grep -qF 'call post_cellranger.run_integrative as integrative' "${resume_workflow}"
+grep -qF 'cpu = estimate_downstream_resources.resources.upstream_cpu' "${resume_workflow}"
+grep -qF 'memory_gb = estimate_downstream_resources.resources.upstream_memory_gb' "${resume_workflow}"
+grep -qF 'future_globals_gib = estimate_downstream_resources.resources.upstream_future_globals_gib' "${resume_workflow}"
+grep -qF 'cpu = estimate_downstream_resources.resources.integrative_cpu' "${resume_workflow}"
+grep -qF 'memory_gb = estimate_downstream_resources.resources.integrative_memory_gb' "${resume_workflow}"
+grep -qF 'future_globals_gib = estimate_downstream_resources.resources.integrative_future_globals_gib' "${resume_workflow}"
+[[ "$(grep -cF 'export SNAP_FUTURE_WORKERS="~{cpu}"' "${post_cellranger_tasks}")" -eq 2 ]]
+grep -qF 'requested workers:' "${parallel_plan}"
+grep -qF 'available cores:' "${parallel_plan}"
+grep -qF 'selected workers:' "${parallel_plan}"
+if grep -Eq 'call post_cellranger\.run_(cluster|contamination_removal|cell_types|clone_phylogeny|de_go|rshiny)' "${resume_workflow}"; then
+  echo "UNEXPECTED: unsupported post-Cell-Ranger module in ${resume_workflow}" >&2
+  exit 1
+fi
+
 echo
 echo "==> Downstream modules in workflow"
 grep -E "^task run_" "${SNAP_ROOT}/wdl/tasks.wdl" | sed 's/task /  /'

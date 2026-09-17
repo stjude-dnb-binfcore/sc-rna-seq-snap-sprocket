@@ -5,6 +5,7 @@
 #' Defaults to sequential; override with SNAP_FUTURE_WORKERS (integer >= 1).
 snap_set_future_plan <- function(workers = NULL) {
   if (!requireNamespace("future", quietly = TRUE)) {
+    message("SNAP future plan unavailable: the future package is not installed")
     return(invisible(NA_integer_))
   }
 
@@ -15,19 +16,30 @@ snap_set_future_plan <- function(workers = NULL) {
       workers <- 1L
     }
   }
+  requested_workers <- as.integer(workers)
 
   max_cores <- if (requireNamespace("parallelly", quietly = TRUE)) {
-    parallelly::availableCores()
+    as.integer(parallelly::availableCores())
   } else {
     1L
   }
-  workers <- min(as.integer(workers), max_cores)
+  workers <- min(requested_workers, max_cores)
 
   if (workers <= 1L) {
     future::plan(future::sequential)
+    plan_name <- "sequential"
   } else {
     future::plan(future::multisession, workers = workers)
+    plan_name <- "multisession"
   }
+
+  message(sprintf(
+    "SNAP future plan: %s; requested workers: %d; available cores: %d; selected workers: %d",
+    plan_name,
+    requested_workers,
+    max_cores,
+    workers
+  ))
 
   invisible(workers)
 }

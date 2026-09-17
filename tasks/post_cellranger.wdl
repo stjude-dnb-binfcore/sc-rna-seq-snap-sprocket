@@ -28,6 +28,7 @@ task run_upstream {
         echo "Module: upstream  LSF mail: ~{notify_email}"
         export SNAP_CONFIG_FILE="~{snap_root}/inputs/project_parameters.generated.yaml"
         export FUTURE_GLOBALS_MAXSIZE_GIB="~{future_globals_gib}"
+        export SNAP_FUTURE_WORKERS="~{cpu}"
         cd "~{snap_root}/analyses/upstream-analysis"
         bash run-upstream-analysis.sh
         echo "done" > "${TASK_DIR}/upstream.done"
@@ -67,6 +68,7 @@ task run_integrative {
         echo "Module: integrative  LSF mail: ~{notify_email}"
         export SNAP_CONFIG_FILE="~{snap_root}/inputs/project_parameters.generated.yaml"
         export FUTURE_GLOBALS_MAXSIZE_GIB="~{future_globals_gib}"
+        export SNAP_FUTURE_WORKERS="~{cpu}"
         if [ -n "~{wait_on}" ]; then echo "Previous step: ~{wait_on}"; fi
         cd "~{snap_root}/analyses/integrative-analysis"
         bash run-integrative-analysis.sh

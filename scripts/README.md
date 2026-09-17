@@ -55,9 +55,11 @@ downstream resource struct; preprocessing requires no helper scripts.
 To resume from completed Cell Ranger runs, use the separate
 `workflows/daedalus_from_cellranger.wdl` entry point. Each input names a sample and its
 Cell Ranger `outs` directory; the workflow validates unique IDs and required
-Cell Ranger artifacts, derives `metrics_summary.csv`, and emits the same typed
-Cell Ranger and downstream resource handoff without requiring FASTQs, a genome
-reference, FastQC, MultiQC, or Cell Ranger:
+Cell Ranger artifacts, derives `metrics_summary.csv`, estimates resources, then
+runs the upstream and integrative modules in sequence against an isolated
+writable project root. It does not require FASTQs or a genome reference and
+does not run FastQC, MultiQC, Cell Ranger, clustering, contamination removal,
+cell-type annotation, clone phylogeny, DE/GO, or R Shiny:
 
 ```bash
 cp inputs/from_cellranger.example.json inputs/from_cellranger.json
@@ -70,7 +72,10 @@ sprocket run workflows/daedalus_from_cellranger.wdl @inputs/from_cellranger.json
 Include every sample that will participate in downstream analysis. Resource
 estimates from a subset reflect only that subset's sample and cell counts. Both
 preprocessing entry points retain `cellranger_summary.tsv`, with one row per
-sample containing its ID and parsed estimated-cell count.
+sample containing its ID and parsed estimated-cell count. The resume workflow
+also emits completion sentinels and result-directory paths for upstream and
+integrative analysis. Its `project_root` must be a writable isolated checkout;
+the source Cell Ranger directories may be mounted read-only.
 
 ## Load modules
 

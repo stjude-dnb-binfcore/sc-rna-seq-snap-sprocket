@@ -1,19 +1,25 @@
 version 1.3
 
+import "../tasks/post_cellranger.wdl" as post_cellranger
 import "../tasks/pre_cellranger.wdl" as preprocessing
 import "../tasks/preprocessing_types.wdl" as types
 
 workflow daedalus_from_cellranger {
     meta {
-        description: "Import existing Cell Ranger outputs and estimate downstream resources"
+        description: "Import existing Cell Ranger outputs, estimate resources, and run upstream and integrative analyses"
         author: "DNB Bioinformatics Core"
     }
 
     input {
         Array[ExistingCellRangerInput]+ cellranger_inputs
         String resource_estimator_container
+        String project_root
+        String downstream_container
+        String notify_email
         Int resource_estimator_cpu = 1
         Int resource_estimator_memory_gb = 1
+        String upstream_lsf_queue = "standard"
+        String integrative_lsf_queue = "standard"
     }
 
     scatter (cellranger_input in cellranger_inputs) {
@@ -62,6 +68,26 @@ workflow daedalus_from_cellranger {
         container_image = resource_estimator_container,
     }
 
+    call post_cellranger.run_upstream as upstream after write_cellranger_summary { input:
+        snap_root = project_root,
+        container_image = downstream_container,
+        notify_email = notify_email,
+        cpu = estimate_downstream_resources.resources.upstream_cpu,
+        memory_gb = estimate_downstream_resources.resources.upstream_memory_gb,
+        future_globals_gib = estimate_downstream_resources.resources.upstream_future_globals_gib,
+        lsf_queue = upstream_lsf_queue,
+    }
+
+    call post_cellranger.run_integrative as integrative after upstream { input:
+        snap_root = project_root,
+        container_image = downstream_container,
+        notify_email = notify_email,
+        cpu = estimate_downstream_resources.resources.integrative_cpu,
+        memory_gb = estimate_downstream_resources.resources.integrative_memory_gb,
+        future_globals_gib = estimate_downstream_resources.resources.integrative_future_globals_gib,
+        lsf_queue = integrative_lsf_queue,
+    }
+
     output {
         Array[CellRangerOutput] cellranger_outputs = cellranger_output
         File cellranger_summary = write_cellranger_summary.summary
@@ -74,5 +100,9 @@ workflow daedalus_from_cellranger {
         Int integrative_cpu = estimate_downstream_resources.resources.integrative_cpu
         Int integrative_memory_gb = estimate_downstream_resources.resources.integrative_memory_gb
         Int integrative_future_globals_gib = estimate_downstream_resources.resources.integrative_future_globals_gib
+        File upstream_completion = upstream.done_flag
+        String upstream_results = project_root + "/analyses/upstream-analysis/results"
+        File integrative_completion = integrative.done_flag
+        String integrative_results = project_root + "/analyses/integrative-analysis/results"
     }
 }
