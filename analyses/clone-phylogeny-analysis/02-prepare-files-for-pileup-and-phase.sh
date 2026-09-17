@@ -17,7 +17,7 @@ mkdir -p ./results
 mkdir -p ./results/02-prepare-files-for-pileup-and-phase
 #######################################################
 # Read config: WDL/Sprocket uses inputs/project_parameters.generated.yaml
-# (SNAP_CONFIG_FILE is set in wdl/tasks.wdl). Interactive, LSF, and
+# (SNAP_CONFIG_FILE is set by the static WDL tasks). Interactive, LSF, and
 # launch_full_pipeline.sh use project_parameters.Config.yaml.
 SNAP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 # shellcheck source=../../scripts/snap-read-config.sh

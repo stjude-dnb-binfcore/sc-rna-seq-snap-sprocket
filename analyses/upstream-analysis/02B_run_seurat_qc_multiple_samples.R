@@ -13,7 +13,7 @@ suppressPackageStartupMessages({
 
 #################################################################################
 # Load config: WDL/Sprocket uses inputs/project_parameters.generated.yaml
-# (SNAP_CONFIG_FILE is set in wdl/tasks.wdl). Interactive, LSF, and
+# (SNAP_CONFIG_FILE is set by the static WDL tasks). Interactive, LSF, and
 # launch_full_pipeline.sh use project_parameters.Config.yaml.
 snap_root <- normalizePath("../..", winslash = "/")
 source(file.path(snap_root, "scripts", "snap_read_config.R"))

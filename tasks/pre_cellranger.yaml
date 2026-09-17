@@ -51,6 +51,12 @@ estimate_downstream_resources:
         - '"integrative_cpu":\s*10\b'
         - '"integrative_memory_gb":\s*116\b'
         - '"integrative_future_globals_gib":\s*200\b'
+        - '"cluster_cpu":\s*4\b'
+        - '"cluster_memory_gb":\s*58\b'
+        - '"cluster_future_globals_gib":\s*400\b'
+        - '"contamination_memory_gb":\s*116\b'
+        - '"cell_types_memory_gb":\s*77\b'
+        - '"de_go_memory_gb":\s*39\b'
 
   - name: summed_cells_cross_scaling_boundary
     tags: [unit, resources]
@@ -68,6 +74,12 @@ estimate_downstream_resources:
         - '"integrative_cpu":\s*10\b'
         - '"integrative_memory_gb":\s*144\b'
         - '"integrative_future_globals_gib":\s*250\b'
+        - '"cluster_cpu":\s*8\b'
+        - '"cluster_memory_gb":\s*77\b'
+        - '"cluster_future_globals_gib":\s*500\b'
+        - '"contamination_memory_gb":\s*144\b'
+        - '"cell_types_memory_gb":\s*96\b'
+        - '"de_go_memory_gb":\s*48\b'
 
   - name: five_samples_increase_upstream_cpu
     tags: [unit, resources]

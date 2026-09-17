@@ -38,7 +38,7 @@ done
 }
 
 SNAP_ROOT="$(cd "${SNAP_ROOT}" && pwd)"
-RUNS_ROOT="${SNAP_ROOT}/out/runs/sc_rna_seq_snap_downstream"
+RUNS_ROOT="${SNAP_ROOT}/out/runs/daedalus_from_cellranger"
 RESOURCE_USAGE_DIR="${SNAP_ROOT}/out/resource_usage"
 
 if ! command -v jq >/dev/null 2>&1; then
@@ -57,7 +57,7 @@ normalize_module() {
     clone_phylogeny*) echo "clone_phylogeny" ;;
     de_go*) echo "de_go" ;;
     rshiny*) echo "rshiny" ;;
-    *) echo "${alias}" ;;
+    *) return 1 ;;
   esac
 }
 
@@ -231,7 +231,9 @@ queried_count=0
 for call_path in "${CALLS_DIR}"/*/; do
   [[ -d "${call_path}" ]] || continue
   call_alias="$(basename "${call_path}")"
-  module="$(normalize_module "${call_alias}")"
+  if ! module="$(normalize_module "${call_alias}")"; then
+    continue
+  fi
   attempt_dir="${call_path}attempts/0"
   job_id_file="${attempt_dir}/job_id"
   inputs_file="${call_path}inputs.json"

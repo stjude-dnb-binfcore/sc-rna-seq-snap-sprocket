@@ -22,11 +22,14 @@ bin-release/
 .DS_Store
 */.DS_Store
 
-# Analyst-authored preprocessing inputs
-inputs/preprocessing.json
-
 # Sprocket unit test execution artifacts
 test/runs/
+
+# Launcher-generated runtime files
+inputs/generated_downstream.json
+inputs/project_parameters.generated.yaml
+inputs/sprocket.generated.toml
+inputs/sprocket_inputs.json
 
 # Generated WDL documentation
 _site/

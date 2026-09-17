@@ -16,7 +16,7 @@ PIPELINE: "Standard sc-/sn-RNA-Seq Analysis in 10X Genomics data"
 START_DATE: "10/15/2024"
 COMPLETION_DATE: "ONGOING"
 
-# Resource profile for WDL/Sprocket orchestration (Phase 1+).
+# Resource profile for WDL/Sprocket orchestration.
 # `scripts/estimate-snap-downstream-resources.R --update-yaml` refreshes these from metadata + Cell Ranger.
 resource_profile:
   num_samples: null                      # null = count from Cell Ranger / project_metadata.tsv
@@ -27,7 +27,8 @@ resource_profile:
   container_image: "/sc-rna-seq-snap/rstudio_4.4.0_seurat_4.4.0_latest.sif"                  # null = <root_dir>/rstudio_4.4.0_seurat_4.4.0_latest.sif
 
 # Which downstream modules to run via WDL/Sprocket (all optional).
-# Toggle any combination; each enabled module waits on the last completed step.
+# WDL `after` clauses preserve ordering among enabled modules.
+# If a producer module is disabled, its required output must already exist.
 # Example — upstream only: run_upstream: true, all others false.
 workflow_profile:
   run_upstream: true
@@ -231,4 +232,3 @@ future_globals_value_dego: 200 # Default. Adjust based on dataset size and avail
 results_filepath: "./" # Absolute path to the dir where local fork repo lives
 mac_results_filepath: "./" # Absolute path to the dir where local fork repo lives
 cohort_value: "/NAME_OF_FORK_REPO>"  # Name of the local fork repo
-

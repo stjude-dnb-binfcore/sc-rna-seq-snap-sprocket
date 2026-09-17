@@ -28,15 +28,27 @@ suppressPackageStartupMessages({
   a
 }
 
-#' Sprocket lsf_apptainer treats bare paths as docker:// URIs. Local .sif files need file://.
-sprocket_container_uri <- function(image) {
+#' Sprocket lsf_apptainer treats bare paths as docker:// URIs. Local images need file://.
+sprocket_container_uri <- function(image, snap_root) {
   if (is.null(image) || !nzchar(image)) return(image)
-  if (grepl("^[a-zA-Z][a-zA-Z0-9+.-]*://", image)) return(image)
-  path <- normalizePath(image, winslash = "/", mustWork = FALSE)
-  if (grepl("\\.sif$", path, ignore.case = TRUE) || file.exists(path)) {
-    return(paste0("file://", path))
+  if (grepl("^[a-zA-Z][a-zA-Z0-9+.-]*://", image) && !startsWith(image, "file://")) {
+    return(image)
   }
-  image
+
+  path <- sub("^file://", "", image)
+  is_file_path <- startsWith(image, "file://") ||
+    startsWith(path, "/") ||
+    startsWith(path, "./") ||
+    startsWith(path, "../") ||
+    grepl("\\.sif$", path, ignore.case = TRUE)
+  if (!is_file_path) return(image)
+
+  if (!startsWith(path, "/")) path <- file.path(snap_root, path)
+  path <- normalizePath(path, winslash = "/", mustWork = FALSE)
+  if (!file.exists(path)) {
+    stop("Container image does not exist: ", path)
+  }
+  paste0("file://", path)
 }
 
 parse_args <- function(args) {
@@ -110,9 +122,57 @@ write_updated_yaml <- function(cfg, master_path, yaml_output, yaml_in_place) {
 
 count_metadata_samples <- function(metadata_path) {
   if (!file.exists(metadata_path)) { warning("Metadata not found — using 8 samples"); return(8L) }
-  md <- read.delim(metadata_path, stringsAsFactors = FALSE)
+  md <- suppressWarnings(read.delim(metadata_path, stringsAsFactors = FALSE))
   if (!"ID" %in% colnames(md)) stop("Metadata must contain an ID column")
-  nrow(md)
+  length(unique(trimws(as.character(md$ID))))
+}
+
+validate_metadata_samples <- function(metadata_path, cellranger_sample_ids, data_dir) {
+  if (!file.exists(metadata_path)) {
+    stop("Project metadata does not exist: ", metadata_path)
+  }
+
+  md <- suppressWarnings(read.delim(metadata_path, stringsAsFactors = FALSE))
+  if (!"ID" %in% colnames(md)) stop("Metadata must contain an ID column: ", metadata_path)
+
+  raw_metadata_ids <- trimws(as.character(md$ID))
+  raw_metadata_ids <- raw_metadata_ids[!is.na(raw_metadata_ids) & nzchar(raw_metadata_ids)]
+  duplicate_ids <- sort(unique(raw_metadata_ids[duplicated(raw_metadata_ids)]))
+  if (length(duplicate_ids)) {
+    stop(
+      "Project metadata IDs must be unique. Duplicates: ",
+      paste(duplicate_ids, collapse = ", "),
+      "\n  Metadata: ", metadata_path
+    )
+  }
+  metadata_ids <- sort(raw_metadata_ids)
+  cellranger_ids <- sort(unique(trimws(as.character(cellranger_sample_ids))))
+
+  missing_metadata <- setdiff(cellranger_ids, metadata_ids)
+  missing_cellranger <- setdiff(metadata_ids, cellranger_ids)
+  if (length(missing_metadata) || length(missing_cellranger)) {
+    details <- character()
+    if (length(missing_metadata)) {
+      details <- c(
+        details,
+        paste0("  Missing from metadata: ", paste(missing_metadata, collapse = ", "))
+      )
+    }
+    if (length(missing_cellranger)) {
+      details <- c(
+        details,
+        paste0("  Missing Cell Ranger output: ", paste(missing_cellranger, collapse = ", "))
+      )
+    }
+    stop(
+      "Project metadata IDs must exactly match completed Cell Ranger sample directories.\n",
+      paste(details, collapse = "\n"),
+      "\n  Metadata: ", metadata_path,
+      "\n  Cell Ranger root: ", data_dir
+    )
+  }
+
+  invisible(metadata_ids)
 }
 
 parse_cellranger_metrics <- function(metrics_path) {
@@ -262,35 +322,51 @@ compute_resources <- function(num_samples, estimated_cells_per_sample, total_cel
   res
 }
 
-build_sprocket_inputs <- function(snap_root, container_image, notify_email, res, toggles) {
+build_cellranger_inputs <- function(data_dir, cellranger) {
+  sample_ids <- sort(names(cellranger$per_sample))
+  if (!length(sample_ids)) {
+    stop(
+      "The static from_cellranger workflow requires completed Cell Ranger outputs under:\n  ",
+      data_dir
+    )
+  }
+
+  unname(lapply(sample_ids, function(sample_id) {
+    count_output <- normalizePath(
+      file.path(data_dir, sample_id, "outs"),
+      winslash = "/",
+      mustWork = TRUE
+    )
+    has_matrix <- file.exists(file.path(count_output, "filtered_feature_bc_matrix.h5")) ||
+      dir.exists(file.path(count_output, "filtered_feature_bc_matrix"))
+    if (!has_matrix) {
+      stop("Cell Ranger output has no filtered feature matrix: ", count_output)
+    }
+    list(id = sample_id, count_output = count_output)
+  }))
+}
+
+build_sprocket_inputs <- function(
+  snap_root,
+  container_image,
+  notify_email,
+  toggles,
+  cellranger_inputs
+) {
   list(
-    `sc_rna_seq_snap_downstream.snap_root` = snap_root,
-    `sc_rna_seq_snap_downstream.container_image` = sprocket_container_uri(container_image),
-    `sc_rna_seq_snap_downstream.notify_email` = notify_email,
-    `sc_rna_seq_snap_downstream.run_upstream` = toggles$run_upstream,
-    `sc_rna_seq_snap_downstream.run_integrative` = toggles$run_integrative,
-    `sc_rna_seq_snap_downstream.run_cluster` = toggles$run_cluster,
-    `sc_rna_seq_snap_downstream.run_contamination_removal` = toggles$run_contamination_removal,
-    `sc_rna_seq_snap_downstream.run_cell_types` = toggles$run_cell_types,
-    `sc_rna_seq_snap_downstream.run_clone_phylogeny` = toggles$run_clone_phylogeny,
-    `sc_rna_seq_snap_downstream.run_de_go` = toggles$run_de_go,
-    `sc_rna_seq_snap_downstream.run_rshiny` = toggles$run_rshiny,
-    `sc_rna_seq_snap_downstream.num_samples` = res$num_samples,
-    `sc_rna_seq_snap_downstream.estimated_cells_per_sample` = res$estimated_cells_per_sample,
-    `sc_rna_seq_snap_downstream.upstream_cpu` = res$upstream_cpu,
-    `sc_rna_seq_snap_downstream.upstream_memory_gb` = res$upstream_memory_gb,
-    `sc_rna_seq_snap_downstream.upstream_future_globals_gib` = res$upstream_future_globals_gib,
-    `sc_rna_seq_snap_downstream.integrative_cpu` = res$integrative_cpu,
-    `sc_rna_seq_snap_downstream.integrative_memory_gb` = res$integrative_memory_gb,
-    `sc_rna_seq_snap_downstream.integrative_future_globals_gib` = res$integrative_future_globals_gib,
-    `sc_rna_seq_snap_downstream.cluster_cpu` = res$cluster_cpu,
-    `sc_rna_seq_snap_downstream.cluster_memory_gb` = res$cluster_memory_gb,
-    `sc_rna_seq_snap_downstream.cluster_future_globals_gib` = res$cluster_future_globals_gib,
-    `sc_rna_seq_snap_downstream.contamination_memory_gb` = res$contamination_memory_gb,
-    `sc_rna_seq_snap_downstream.contamination_future_globals_gib` = res$contamination_future_globals_gib,
-    `sc_rna_seq_snap_downstream.cell_types_memory_gb` = res$cell_types_memory_gb,
-    `sc_rna_seq_snap_downstream.de_go_memory_gb` = res$de_go_memory_gb,
-    `sc_rna_seq_snap_downstream.de_go_future_globals_gib` = res$de_go_future_globals_gib
+    `daedalus_from_cellranger.cellranger_inputs` = cellranger_inputs,
+    `daedalus_from_cellranger.resource_estimator_container` = container_image,
+    `daedalus_from_cellranger.project_root` = snap_root,
+    `daedalus_from_cellranger.downstream_container` = container_image,
+    `daedalus_from_cellranger.notify_email` = notify_email,
+    `daedalus_from_cellranger.run_upstream` = toggles$run_upstream,
+    `daedalus_from_cellranger.run_integrative` = toggles$run_integrative,
+    `daedalus_from_cellranger.run_cluster` = toggles$run_cluster,
+    `daedalus_from_cellranger.run_contamination_removal` = toggles$run_contamination_removal,
+    `daedalus_from_cellranger.run_cell_types` = toggles$run_cell_types,
+    `daedalus_from_cellranger.run_clone_phylogeny` = toggles$run_clone_phylogeny,
+    `daedalus_from_cellranger.run_de_go` = toggles$run_de_go,
+    `daedalus_from_cellranger.run_rshiny` = toggles$run_rshiny
   )
 }
 
@@ -337,6 +413,12 @@ main <- function() {
     res$cellranger_observed <- cellranger
     res$total_estimated_cells <- cellranger$total_cells
   }
+  cellranger_inputs <- build_cellranger_inputs(paths$data_dir, cellranger)
+  toggles <- workflow_toggles(cfg)
+  if (any(unlist(toggles, use.names = FALSE))) {
+    validate_metadata_samples(metadata_path, names(cellranger$per_sample), paths$data_dir)
+  }
+  container_image <- sprocket_container_uri(paths$container_image, snap_root)
 
   cat("Downstream resource estimate:", snap_root, "\n")
   cat("  tier:", res$resource_tier, " samples:", res$num_samples,
@@ -365,12 +447,16 @@ main <- function() {
     )
   }
 
-  container_image <- cfg$resource_profile$container_image %||% file.path(snap_root, "rstudio_4.4.0_seurat_4.4.0_latest.sif")
   notify_email <- cfg$CONTACT_EMAIL %||% "user.name@stjude.org"
-  toggles <- workflow_toggles(cfg)
   payload <- list(
     resource_estimate = res,
-    sprocket_inputs = build_sprocket_inputs(snap_root, container_image, notify_email, res, toggles)
+    sprocket_inputs = build_sprocket_inputs(
+      snap_root,
+      container_image,
+      notify_email,
+      toggles,
+      cellranger_inputs
+    )
   )
 
   if (!is.null(args$output)) {
