@@ -6,6 +6,11 @@ struct SampleInput {
     Array[String]+ sample_names
 }
 
+struct ExistingCellRangerInput {
+    String id
+    Directory count_output
+}
+
 struct FastQcOutput {
     String sample_id
     Array[File] html_reports

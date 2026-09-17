@@ -1,6 +1,6 @@
-# sc-rna-seq-snap downstream (WDL + Sprocket)
+# Daedalus downstream (WDL + Sprocket)
 
-Run downstream snap modules (upstream-analysis onwards) on St. Jude HPC via **Sprocket** and **WDL**. Resources are estimated from your sample count and Cell Ranger metrics; module toggles and biology parameters come from YAML.
+Run downstream Daedalus modules (upstream-analysis onwards) on St. Jude HPC via **Sprocket** and **WDL**. Resources are estimated from your sample count and Cell Ranger metrics; module toggles and biology parameters come from YAML.
 
 **Background:** [resources-snap.md](../../../docs/resources-snap.md) · [resources-sprocket.md](../../../docs/resources-sprocket.md) · [learning path](../../../docs/learning-path-wdl-sprocket-containers.md)
 
@@ -51,6 +51,26 @@ and `DownstreamResources` values. Each `CellRangerOutput` keeps the sample ID,
 `outs` directory, raw metrics CSV, and parsed estimated cell count together. A
 WDL task parses each Cell Ranger CSV before the resource task calculates the
 downstream resource struct; preprocessing requires no helper scripts.
+
+To resume from completed Cell Ranger runs, use the separate
+`workflows/from_cellranger.wdl` entry point. Each input names a sample and its
+Cell Ranger `outs` directory; the workflow validates unique IDs and required
+Cell Ranger artifacts, derives `metrics_summary.csv`, and emits the same typed
+Cell Ranger and downstream resource handoff without requiring FASTQs, a genome
+reference, FastQC, MultiQC, or Cell Ranger:
+
+```bash
+cp inputs/from_cellranger.example.json inputs/from_cellranger.json
+sprocket validate workflows/from_cellranger.wdl @inputs/from_cellranger.json \
+  --config sprocket.toml --skip-config-search
+sprocket run workflows/from_cellranger.wdl @inputs/from_cellranger.json \
+  --config sprocket.toml --skip-config-search --output-dir /absolute/path/to/output
+```
+
+Include every sample that will participate in downstream analysis. Resource
+estimates from a subset reflect only that subset's sample and cell counts. Both
+preprocessing entry points retain `cellranger_summary.tsv`, with one row per
+sample containing its ID and parsed estimated-cell count.
 
 ## Load modules
 

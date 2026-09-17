@@ -1,0 +1,9 @@
+{
+  "daedalus_from_cellranger.cellranger_inputs": [
+    {
+      "id": "sample-1",
+      "count_output": "/absolute/path/to/sample-1/outs"
+    }
+  ],
+  "daedalus_from_cellranger.resource_estimator_container": "file:///absolute/path/to/r-base.sif"
+}

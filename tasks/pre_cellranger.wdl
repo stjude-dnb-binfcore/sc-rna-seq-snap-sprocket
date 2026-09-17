@@ -182,6 +182,56 @@ task run_cellranger {
     }
 }
 
+task validate_existing_cellranger {
+    input {
+        Array[String]+ sample_ids
+        Array[Directory]+ count_outputs
+        Int cpu
+        Int memory_gb
+        String container_image
+    }
+
+    File sample_id_list = write_lines(sample_ids)
+    File count_output_list = write_lines(count_outputs)
+
+    command <<<
+        set -euo pipefail
+        mapfile -t SAMPLE_IDS < "~{sample_id_list}"
+        mapfile -t COUNT_OUTPUTS < "~{count_output_list}"
+        if ((${#SAMPLE_IDS[@]} != ${#COUNT_OUTPUTS[@]})); then
+          echo "sample ID and Cell Ranger output counts must match" >&2
+          exit 1
+        fi
+        if printf '%s\n' "${SAMPLE_IDS[@]}" | LC_ALL=C sort | uniq -d | grep -q .; then
+          echo "sample IDs must be unique" >&2
+          exit 1
+        fi
+        for INDEX in "${!SAMPLE_IDS[@]}"; do
+          SAMPLE_ID="${SAMPLE_IDS[$INDEX]}"
+          COUNT_OUTPUT="${COUNT_OUTPUTS[$INDEX]}"
+          [[ -f "$COUNT_OUTPUT/metrics_summary.csv" ]] || {
+            echo "Cell Ranger output for $SAMPLE_ID has no metrics_summary.csv: $COUNT_OUTPUT" >&2
+            exit 1
+          }
+          [[ -f "$COUNT_OUTPUT/filtered_feature_bc_matrix.h5" || \
+             -d "$COUNT_OUTPUT/filtered_feature_bc_matrix" ]] || {
+            echo "Cell Ranger output for $SAMPLE_ID has no filtered feature matrix: $COUNT_OUTPUT" >&2
+            exit 1
+          }
+        done
+    >>>
+
+    output {
+        Boolean valid = true
+    }
+
+    runtime {
+        cpu: cpu
+        memory: "~{memory_gb} GB"
+        container: container_image
+    }
+}
+
 task parse_cellranger_metrics {
     input {
         File metrics_csv
@@ -220,6 +270,63 @@ task parse_cellranger_metrics {
 
     output {
         Int estimated_cells = read_int(stdout())
+    }
+
+    runtime {
+        cpu: cpu
+        memory: "~{memory_gb} GB"
+        container: container_image
+    }
+}
+
+task write_cellranger_summary {
+    input {
+        Array[String]+ sample_ids
+        Array[Int]+ estimated_cells
+        Int cpu
+        Int memory_gb
+        String container_image
+    }
+
+    File sample_id_list = write_lines(sample_ids)
+
+    command <<<
+        set -euo pipefail
+        Rscript --vanilla - \
+          "~{sample_id_list}" \
+          "~{sep(",", estimated_cells)}" <<'RSCRIPT'
+        abort <- function(...) stop(..., call. = FALSE)
+        args <- commandArgs(trailingOnly = TRUE)
+        columns <- list(
+          readLines(args[[1L]], warn = FALSE),
+          strsplit(args[[2L]], ",", fixed = TRUE)[[1L]]
+        )
+        lengths <- vapply(columns, length, integer(1))
+        if (!length(lengths) || length(unique(lengths)) != 1L || lengths[[1L]] < 1L) {
+          abort("Cell Ranger summary columns must have matching nonzero lengths")
+        }
+        estimated_cells <- suppressWarnings(as.integer(columns[[2L]]))
+        if (any(is.na(estimated_cells)) || any(estimated_cells < 1L)) {
+          abort("estimated cell counts must be positive integers")
+        }
+        summary <- data.frame(
+          sample_id = columns[[1L]],
+          estimated_cells = estimated_cells,
+          check.names = FALSE,
+          stringsAsFactors = FALSE
+        )
+        write.table(
+          summary,
+          file = "cellranger_summary.tsv",
+          sep = "\t",
+          quote = FALSE,
+          row.names = FALSE
+        )
+        RSCRIPT
+    >>>
+
+    output {
+        File summary = "cellranger_summary.tsv"
     }
 
     runtime {

@@ -3,7 +3,7 @@ version 1.3
 import "../tasks/pre_cellranger.wdl" as preprocessing
 import "../tasks/preprocessing_types.wdl" as types
 
-workflow snap_preprocessing {
+workflow daedalus_preprocessing {
     meta {
         description: "FastQC, MultiQC, Cell Ranger, and downstream resource estimation"
         author: "DNB Bioinformatics Core"
@@ -91,12 +91,29 @@ workflow snap_preprocessing {
         container_image = resource_estimator_container,
     }
 
+    call preprocessing.write_cellranger_summary { input:
+        sample_ids = sample_id,
+        estimated_cells = sample_estimated_cells,
+        cpu = 1,
+        memory_gb = 1,
+        container_image = resource_estimator_container,
+    }
+
     output {
         Array[FastQcOutput] fastqc_outputs = run_fastqc.result
         File multiqc_html_report = run_multiqc.html_report
         Directory multiqc_data = run_multiqc.data
         Array[CellRangerOutput] cellranger_outputs = cellranger_output
+        File cellranger_summary = write_cellranger_summary.summary
         Array[SampleInput] normalized_samples = samples
+        Array[Int] estimated_cells = sample_estimated_cells
+        Int num_samples = length(samples)
         DownstreamResources downstream_resources = estimate_downstream_resources.resources
+        Int upstream_cpu = estimate_downstream_resources.resources.upstream_cpu
+        Int upstream_memory_gb = estimate_downstream_resources.resources.upstream_memory_gb
+        Int upstream_future_globals_gib = estimate_downstream_resources.resources.upstream_future_globals_gib
+        Int integrative_cpu = estimate_downstream_resources.resources.integrative_cpu
+        Int integrative_memory_gb = estimate_downstream_resources.resources.integrative_memory_gb
+        Int integrative_future_globals_gib = estimate_downstream_resources.resources.integrative_future_globals_gib
     }
 }
