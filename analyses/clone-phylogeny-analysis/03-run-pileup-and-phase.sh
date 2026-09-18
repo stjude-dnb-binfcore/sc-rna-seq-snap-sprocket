@@ -14,14 +14,19 @@ set -o pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")" 
 
 #######################################################
-# Read multiple values and assign them to variables by parsing yaml file
-root_dir=$(cat ../../project_parameters.Config.yaml | grep 'root_dir:' | awk '{print $2}')
-root_dir=${root_dir//\"/}  # Removes all double quotes
-echo "${root_dir}"  # Output: This is a string with quotes.
+# Read config: WDL/Sprocket uses inputs/project_parameters.generated.yaml
+# (SNAP_CONFIG_FILE is set by the static WDL tasks). Interactive, LSF, and
+# launch_full_pipeline.sh use project_parameters.Config.yaml.
+SNAP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../../scripts/snap-read-config.sh
+source "${SNAP_ROOT}/scripts/snap-read-config.sh"
+snap_log_config_file
 
-cellranger_parameters=$(cat ../../project_parameters.Config.yaml | grep 'cellranger_parameters:' | awk '{print $2}')
-cellranger_parameters=${cellranger_parameters//\"/}  # Removes all double quotes
-echo "$cellranger_parameters"  # Output: This is a string with quotes.
+root_dir="$(snap_yaml_get root_dir)"
+echo "${root_dir}"
+
+cellranger_parameters="$(snap_yaml_get cellranger_parameters)"
+echo "$cellranger_parameters"
 
 module_dir=${root_dir}/analyses/clone-phylogeny-analysis
 echo "${module_dir}"
@@ -39,8 +44,8 @@ input_dir=${module_dir}/results/02-prepare-files-for-pileup-and-phase
 
 mkdir -p ${input_dir}/sample_barcode
 
-# Define array with samples
-mapfile -t sample < <(grep '^ *-' ../../project_parameters.Config.yaml | grep '[0-9]' | sed 's/^ *- *//')
+# Define array with samples (from config or project_metadata.tsv)
+mapfile -t sample < <(snap_sample_ids)
 
 
 ##################

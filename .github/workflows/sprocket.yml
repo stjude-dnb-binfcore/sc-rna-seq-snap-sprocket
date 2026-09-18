@@ -1,0 +1,111 @@
+name: Sprocket
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/sprocket.yml"
+      - "sprocket.local.toml"
+      - "launch-snap-downstream.sh"
+      - "scripts/**"
+      - "tasks/**"
+      - "test/fixtures/**"
+      - "workflows/**"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/sprocket.yml"
+      - "sprocket.local.toml"
+      - "launch-snap-downstream.sh"
+      - "scripts/**"
+      - "tasks/**"
+      - "test/fixtures/**"
+      - "workflows/**"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+      - name: Install Sprocket
+        uses: stjude-rust-labs/setup-sprocket@v1.0.1
+        with:
+          github-token: ${{ github.token }}
+      - name: Check formatting
+        run: sprocket format check workflows tasks
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+      - name: Install Sprocket
+        uses: stjude-rust-labs/setup-sprocket@v1.0.1
+        with:
+          github-token: ${{ github.token }}
+      - name: Check WDL
+        run: sprocket check workflows tasks
+      - name: Lint WDL
+        run: sprocket lint workflows tasks
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+      - name: Install Sprocket
+        uses: stjude-rust-labs/setup-sprocket@v1.0.1
+        with:
+          github-token: ${{ github.token }}
+      - name: Pull test container
+        run: docker pull rocker/r-ver:4.4.0
+      - name: Run WDL tests
+        run: >-
+          sprocket dev test .
+          --workspace .
+          --config sprocket.local.toml
+          --skip-config-search
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+      - name: Install Sprocket
+        uses: stjude-rust-labs/setup-sprocket@v1.0.1
+        with:
+          github-token: ${{ github.token }}
+      - name: Generate WDL documentation
+        run: >-
+          sprocket dev doc .
+          --output _site
+          --overwrite
+          --github-url https://github.com/stjude-dnb-binfcore/sc-rna-seq-snap-sprocket
+      - name: Upload GitHub Pages artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: _site
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v6.0.0
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5.0.1

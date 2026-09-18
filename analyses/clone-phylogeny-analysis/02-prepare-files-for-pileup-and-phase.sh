@@ -16,10 +16,16 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 mkdir -p ./results
 mkdir -p ./results/02-prepare-files-for-pileup-and-phase
 #######################################################
-# Read multiple values and assign them to variables by parsing yaml file
-root_dir=$(cat ../../project_parameters.Config.yaml | grep 'root_dir:' | awk '{print $2}')
-root_dir=${root_dir//\"/}  # Removes all double quotes
-echo "${root_dir}"  # Output: This is a string with quotes.
+# Read config: WDL/Sprocket uses inputs/project_parameters.generated.yaml
+# (SNAP_CONFIG_FILE is set by the static WDL tasks). Interactive, LSF, and
+# launch_full_pipeline.sh use project_parameters.Config.yaml.
+SNAP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# shellcheck source=../../scripts/snap-read-config.sh
+source "${SNAP_ROOT}/scripts/snap-read-config.sh"
+snap_log_config_file
+
+root_dir="$(snap_yaml_get root_dir)"
+echo "${root_dir}"
 
 module_dir=${root_dir}/analyses/clone-phylogeny-analysis
 echo "${module_dir}"
@@ -30,10 +36,8 @@ echo "${input_dir}"
 references_dir=${input_dir}/references
 echo "${references_dir}"
 
-
-genome_name=$(cat ../../project_parameters.Config.yaml | grep 'genome_name:' | awk '{print $2}')
-genome_name=${genome_name//\"/}  # Removes all double quotes
-echo "$genome_name"  # Output: This is a string with quotes.
+genome_name="$(snap_yaml_get genome_name)"
+echo "$genome_name"
 
 ########################################################################
 # Check what species the dataset is from GRCh38 

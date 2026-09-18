@@ -1,0 +1,15 @@
+# Sprocket local/VM config — Docker backend (no LSF, no Apptainer).
+#
+# Used by the WDL task tests in CI.
+#
+# Prerequisites:
+#   - Docker daemon running (Docker Desktop on Mac/Windows, or docker on Linux)
+
+[run]
+backend = "local_docker"
+
+[run.backends.local_docker]
+type = "docker"
+
+[run.workflow.scatter]
+concurrency = 4
