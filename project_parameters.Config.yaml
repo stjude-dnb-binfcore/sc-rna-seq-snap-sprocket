@@ -16,7 +16,7 @@ PIPELINE: "Standard sc-/sn-RNA-Seq Analysis in 10X Genomics data"
 START_DATE: "10/15/2024"
 COMPLETION_DATE: "ONGOING"
 
-# Resource profile for WDL/Sprocket orchestration (Phase 1+).
+# Resource profile for WDL/Sprocket orchestration.
 # `scripts/estimate-snap-downstream-resources.R --update-yaml` refreshes these from metadata + Cell Ranger.
 resource_profile:
   num_samples: null                      # null = count from Cell Ranger / project_metadata.tsv
@@ -27,8 +27,9 @@ resource_profile:
   container_image: "/sc-rna-seq-snap/rstudio_4.4.0_seurat_4.4.0_latest.sif"                  # null = <root_dir>/rstudio_4.4.0_seurat_4.4.0_latest.sif
 
 # Which downstream modules to run via WDL/Sprocket (all optional).
-# Toggle any combination; each enabled module waits on the last completed step.
-# Example — upstream only: run_upstream: true, all others false.
+# Modules run in parallel as much as possible.
+# If a producer module is disabled, its required output must already exist.
+# Example - upstream only: run_upstream: true, all others false.
 workflow_profile:
   run_upstream: true
   run_integrative: true
@@ -74,7 +75,7 @@ nfeatures_value: 3000 # define number of variable features
 prefix: "lognorm" # create label based on the normalization method used
 use_miQC: "NO" # Options: "YES" or "NO". Use of miQC R package or not; see `README.md` file for more information.
 use_only_step1: "NO" # Options: "YES" or "NO". Use of both or only first step for filtering low quality cells; see `README.md` file for more information.
-condition_value1: "Disease" # Use discrete values. Min #conditions per project: 1 and Max #conditions per project: 3. To use for visualization purposes and split UMAPs. Value to be extracted from column name in `project_metadata.tsv` file. 
+condition_value1: "Disease" # Use discrete values. Min #conditions per project: 1 and Max #conditions per project: 3. To use for visualization purposes and split UMAPs. Value to be extracted from column name in `project_metadata.tsv` file.
 condition_value2: NULL # Use discrete values. Min #conditions per project: 1 and Max #conditions per project: 3. To use for visualization purposes and split UMAPs. Value to be extracted from column name in `project_metadata.tsv` file. 
 condition_value3: NULL # Use discrete values. Min #conditions per project: 1 and Max #conditions per project: 3. To use for visualization purposes and split UMAPs. Value to be extracted from column name in `project_metadata.tsv` file. 
 
@@ -231,4 +232,3 @@ future_globals_value_dego: 200 # Default. Adjust based on dataset size and avail
 results_filepath: "./" # Absolute path to the dir where local fork repo lives
 mac_results_filepath: "./" # Absolute path to the dir where local fork repo lives
 cohort_value: "/NAME_OF_FORK_REPO>"  # Name of the local fork repo
-

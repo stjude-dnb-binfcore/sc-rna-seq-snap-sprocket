@@ -38,7 +38,7 @@ done
 }
 
 SNAP_ROOT="$(cd "${SNAP_ROOT}" && pwd)"
-RUNS_ROOT="${SNAP_ROOT}/out/runs/sc_rna_seq_snap_downstream"
+RUNS_ROOT="${SNAP_ROOT}/out/runs/daedalus_from_cellranger"
 RESOURCE_USAGE_DIR="${SNAP_ROOT}/out/resource_usage"
 
 if ! command -v jq >/dev/null 2>&1; then
@@ -57,7 +57,7 @@ normalize_module() {
     clone_phylogeny*) echo "clone_phylogeny" ;;
     de_go*) echo "de_go" ;;
     rshiny*) echo "rshiny" ;;
-    *) echo "${alias}" ;;
+    *) return 1 ;;
   esac
 }
 
@@ -222,7 +222,7 @@ JSON_OUTPUT="${OUTPUT%.csv}.json"
 tmp_rows="$(mktemp)"
 trap 'rm -f "${tmp_rows}"' EXIT
 
-header="run_id,module,call_alias,lsf_job_id,lsf_status,requested_cpu,requested_memory_gb,requested_lsf_queue,actual_max_memory_gb,actual_avg_memory_gb,memory_utilization_pct,lsf_mem_efficiency_pct,cpu_time_sec,wall_time_sec,cpu_avg_efficiency_pct,cpu_peak_efficiency_pct,lsf_exit_code"
+header="run_id,module,call_alias,lsf_job_id,lsf_status,requested_cpu,requested_memory_gb,actual_max_memory_gb,actual_avg_memory_gb,memory_utilization_pct,lsf_mem_efficiency_pct,cpu_time_sec,wall_time_sec,cpu_avg_efficiency_pct,cpu_peak_efficiency_pct,lsf_exit_code"
 echo "${header}" > "${OUTPUT}"
 
 module_count=0
@@ -231,7 +231,9 @@ queried_count=0
 for call_path in "${CALLS_DIR}"/*/; do
   [[ -d "${call_path}" ]] || continue
   call_alias="$(basename "${call_path}")"
-  module="$(normalize_module "${call_alias}")"
+  if ! module="$(normalize_module "${call_alias}")"; then
+    continue
+  fi
   attempt_dir="${call_path}attempts/0"
   job_id_file="${attempt_dir}/job_id"
   inputs_file="${call_path}inputs.json"
@@ -242,17 +244,15 @@ for call_path in "${CALLS_DIR}"/*/; do
   job_id="$(tr -d '[:space:]' < "${job_id_file}")"
   requested_cpu=""
   requested_memory_gb=""
-  requested_lsf_queue=""
 
   if [[ -f "${inputs_file}" ]]; then
     requested_cpu="$(jq -r '.cpu // empty' "${inputs_file}")"
     requested_memory_gb="$(jq -r '.memory_gb // empty' "${inputs_file}")"
-    requested_lsf_queue="$(jq -r '.lsf_queue // empty' "${inputs_file}")"
   fi
 
   stats="$(parse_lsf_stats "${job_id}" 2>/dev/null || true)"
   if [[ -z "${stats}" ]]; then
-    echo "${RUN_ID},${module},${call_alias},${job_id},NOT_FOUND,${requested_cpu},${requested_memory_gb},${requested_lsf_queue},,,,,,,," >> "${OUTPUT}"
+    echo "${RUN_ID},${module},${call_alias},${job_id},NOT_FOUND,${requested_cpu},${requested_memory_gb},,,,,,,,," >> "${OUTPUT}"
     continue
   fi
 
@@ -263,7 +263,7 @@ for call_path in "${CALLS_DIR}"/*/; do
   memory_utilization_pct="$(calc_utilization_pct "${max_mem_gb}" "${requested_memory_gb}")"
   [[ "${exit_code}" == "-" ]] && exit_code=""
 
-  row="${RUN_ID},${module},${call_alias},${job_id},${lsf_status},${requested_cpu},${requested_memory_gb},${requested_lsf_queue},${max_mem_gb},${avg_mem_gb},${memory_utilization_pct},${lsf_mem_efficiency_pct},${cpu_time_sec},${wall_time_sec},${cpu_avg_efficiency_pct},${cpu_peak_efficiency_pct},${exit_code}"
+  row="${RUN_ID},${module},${call_alias},${job_id},${lsf_status},${requested_cpu},${requested_memory_gb},${max_mem_gb},${avg_mem_gb},${memory_utilization_pct},${lsf_mem_efficiency_pct},${cpu_time_sec},${wall_time_sec},${cpu_avg_efficiency_pct},${cpu_peak_efficiency_pct},${exit_code}"
   echo "${row}" >> "${OUTPUT}"
 
   jq -n \
@@ -274,7 +274,6 @@ for call_path in "${CALLS_DIR}"/*/; do
     --arg lsf_status "${lsf_status}" \
     --argjson requested_cpu "$(json_number_or_null "${requested_cpu}")" \
     --argjson requested_memory_gb "$(json_number_or_null "${requested_memory_gb}")" \
-    --arg requested_lsf_queue "${requested_lsf_queue}" \
     --argjson actual_max_memory_gb "$(json_number_or_null "${max_mem_gb}")" \
     --argjson actual_avg_memory_gb "$(json_number_or_null "${avg_mem_gb}")" \
     --argjson memory_utilization_pct "$(json_number_or_null "${memory_utilization_pct}")" \
@@ -292,8 +291,7 @@ for call_path in "${CALLS_DIR}"/*/; do
       lsf_status: $lsf_status,
       requested: {
         cpu: $requested_cpu,
-        memory_gb: $requested_memory_gb,
-        lsf_queue: $requested_lsf_queue
+        memory_gb: $requested_memory_gb
       },
       actual: {
         max_memory_gb: $actual_max_memory_gb,

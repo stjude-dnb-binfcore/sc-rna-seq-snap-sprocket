@@ -1,0 +1,121 @@
+parse_cellranger_metrics:
+  - name: quoted_cell_count_is_parsed
+    tags: [unit, resources]
+    inputs:
+      metrics_csv: [preprocessing/cells-1750-quoted.csv]
+      cpu: [1]
+      memory_gb: [1]
+      container_image: [docker://rocker/r-ver:4.4.0]
+    assertions:
+      stdout:
+        - '\b1750\b'
+
+  - name: missing_cell_count_fails
+    tags: [unit, resources]
+    inputs:
+      metrics_csv: [preprocessing/missing-cell-count.csv]
+      cpu: [1]
+      memory_gb: [1]
+      container_image: [docker://rocker/r-ver:4.4.0]
+    assertions:
+      should_fail: true
+      stderr:
+        - 'metrics CSV must contain exactly one .* column'
+
+  - name: invalid_cell_count_fails
+    tags: [unit, resources]
+    inputs:
+      metrics_csv: [preprocessing/not-a-number.csv]
+      cpu: [1]
+      memory_gb: [1]
+      container_image: [docker://rocker/r-ver:4.4.0]
+    assertions:
+      should_fail: true
+      stderr:
+        - 'invalid Estimated Number of Cells value'
+
+estimate_downstream_resources:
+  - name: baseline_resources
+    tags: [unit, resources]
+    inputs:
+      estimated_cells:
+        - [400000]
+      cpu: [1]
+      memory_gb: [1]
+      container_image: [docker://rocker/r-ver:4.4.0]
+    assertions:
+      stdout:
+        - '"upstream_cpu":\s*8\b'
+        - '"upstream_memory_gb":\s*36\b'
+        - '"upstream_future_globals_gib":\s*200\b'
+        - '"integrative_cpu":\s*10\b'
+        - '"integrative_memory_gb":\s*116\b'
+        - '"integrative_future_globals_gib":\s*200\b'
+        - '"cluster_cpu":\s*4\b'
+        - '"cluster_memory_gb":\s*58\b'
+        - '"cluster_future_globals_gib":\s*400\b'
+        - '"contamination_memory_gb":\s*116\b'
+        - '"cell_types_memory_gb":\s*77\b'
+        - '"de_go_memory_gb":\s*39\b'
+
+  - name: summed_cells_cross_scaling_boundary
+    tags: [unit, resources]
+    inputs:
+      estimated_cells:
+        - [200000, 200001]
+      cpu: [1]
+      memory_gb: [1]
+      container_image: [docker://rocker/r-ver:4.4.0]
+    assertions:
+      stdout:
+        - '"upstream_cpu":\s*8\b'
+        - '"upstream_memory_gb":\s*48\b'
+        - '"upstream_future_globals_gib":\s*250\b'
+        - '"integrative_cpu":\s*10\b'
+        - '"integrative_memory_gb":\s*144\b'
+        - '"integrative_future_globals_gib":\s*250\b'
+        - '"cluster_cpu":\s*8\b'
+        - '"cluster_memory_gb":\s*77\b'
+        - '"cluster_future_globals_gib":\s*500\b'
+        - '"contamination_memory_gb":\s*144\b'
+        - '"cell_types_memory_gb":\s*96\b'
+        - '"de_go_memory_gb":\s*48\b'
+
+  - name: five_samples_increase_upstream_cpu
+    tags: [unit, resources]
+    inputs:
+      estimated_cells:
+        - [1, 1, 1, 1, 1]
+      cpu: [1]
+      memory_gb: [1]
+      container_image: [docker://rocker/r-ver:4.4.0]
+    assertions:
+      stdout:
+        - '"upstream_cpu":\s*16\b'
+        - '"integrative_cpu":\s*10\b'
+
+  - name: nine_samples_increase_integrative_cpu
+    tags: [unit, resources]
+    inputs:
+      estimated_cells:
+        - [1, 1, 1, 1, 1, 1, 1, 1, 1]
+      cpu: [1]
+      memory_gb: [1]
+      container_image: [docker://rocker/r-ver:4.4.0]
+    assertions:
+      stdout:
+        - '"upstream_cpu":\s*16\b'
+        - '"integrative_cpu":\s*16\b'
+
+  - name: thirteen_samples_use_maximum_cpu
+    tags: [unit, resources]
+    inputs:
+      estimated_cells:
+        - [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+      cpu: [1]
+      memory_gb: [1]
+      container_image: [docker://rocker/r-ver:4.4.0]
+    assertions:
+      stdout:
+        - '"upstream_cpu":\s*24\b'
+        - '"integrative_cpu":\s*16\b'

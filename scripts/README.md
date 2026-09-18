@@ -1,17 +1,18 @@
-# sc-rna-seq-snap downstream (WDL + Sprocket)
+# Daedalus downstream launcher
 
-Run downstream snap modules (upstream-analysis onwards) on St. Jude HPC via **Sprocket** and **WDL**. Resources are estimated from your sample count and Cell Ranger metrics; module toggles and biology parameters come from YAML.
-
-**Background:** [resources-snap.md](../../../docs/resources-snap.md) · [resources-sprocket.md](../../../docs/resources-sprocket.md) · [learning path](../../../docs/learning-path-wdl-sprocket-containers.md)
+`launch-snap-downstream.sh` runs enabled downstream analyses from completed
+Cell Ranger outputs. It uses the checked-in
+`workflows/daedalus_from_cellranger.wdl`.
 
 ## Prerequisites
 
 Before launching downstream:
 
-1. **FastQC** and **Cell Ranger** are complete under `analyses/cellranger-analysis/`.
+1. **Cell Ranger** is complete under `analyses/cellranger-analysis/results/02_cellranger_count/<parameters>/<sample>/outs`.
 2. **Sample metadata** exists at `data/project_metadata/project_metadata.tsv`.
-3. **Apptainer/Singularity image** is present at the project root (default name: `rstudio_4.4.0_seurat_4.4.0_latest.sif`).
-4. You are on a St. Jude HPC node with **Sprocket** and **R** available.
+3. Metadata `ID` values exactly match the Cell Ranger sample directory names.
+4. **Apptainer/Singularity image** is configured at `resource_profile.container_image` in `project_parameters.Config.yaml` (default: `<root_dir>/rstudio_4.4.0_seurat_4.4.0_latest.sif`).
+5. You are on a St. Jude HPC node with **Sprocket**, **R**, and **Apptainer/Singularity** available.
 
 ## Load modules
 
@@ -19,13 +20,12 @@ Before launching downstream:
 module load sprocket R singularity
 ```
 
-
 ## Quick start
 
 Run from the **project root** (parent of this `scripts/` folder):
 
 ```bash
-# Dry-run: regenerate WDL/YAML/inputs, validate (no LSF submit)
+# Dry-run: refresh YAML/inputs, check and validate the static WDL (no LSF submit)
 bash launch-snap-downstream.sh
 ```
 
@@ -35,27 +35,30 @@ bash launch-snap-downstream.sh
 
 ### Option 1 — nohup in the background (recommended)
 
-```
-nohup bash launch-snap-downstream.sh --no-call-cache --submit > snap-launch.log 2>&1 &
+```bash
+nohup bash launch-snap-downstream.sh --submit > snap-launch.log 2>&1 &
 echo $!   # note the PID
 ```
 
 Monitor progress:
 
-```
+```bash
 tail -f snap-launch.log
 ```
 
 or
 
-```
-tail -f out/runs/sc_rna_seq_snap_downstream/_latest/calls/upstream/attempts/0/stderr
+```bash
+tail -f out/runs/daedalus_from_cellranger/_latest/calls/upstream/attempts/0/stderr
 ```
 
+Every submission disables Sprocket call caching because shared directories are
+passed as `String` paths, so changes to their contents are not represented in
+the cache key.
 
-### Option 2 — tmux or screen 
+### Option 2 — tmux or screen
 
-```
+```bash
 tmux new -s snap
 module load sprocket R singularity
 bash launch-snap-downstream.sh
@@ -65,12 +68,20 @@ bash launch-snap-downstream.sh --submit
 # Reattach later: tmux attach -t snap
 ```
 
+The WDL uses `after` clauses to enforce this dependency graph:
 
-# Which modules to run via WDL/Sprocket (all optional).
-# Toggle any combination; each enabled module waits on the last completed step.
-# FastQC and Cell Ranger run in parallel with fixed LSF resources (never scaled).
-# Upstream waits on Cell Ranger if enabled, else FastQC.
+```text
+Cell Ranger validation -> Upstream +-> Integrative
+                                    \-> Cluster +-> Contamination removal
+                                                \-> Cell types +-> Clone phylogeny
+                                                                +-> DE/GO
+                                                                \-> R Shiny
+```
 
+Each descendant lists all earlier calls on its branch, so disabling an
+intermediate module does not remove its dependency on an enabled ancestor.
+When a data-producing prerequisite is disabled, its expected result files must
+already exist.
 
 ---
 
@@ -78,19 +89,20 @@ bash launch-snap-downstream.sh --submit
 
 Each run performs these steps in order:
 
-| Step | Script | Output |
-|------|--------|--------|
-| 1. Generate WDL | `scripts/generate-snap-wdl.R` | `wdl/snap.wdl` |
-| 2. Estimate resources | `scripts/estimate-snap-downstream-resources.R` | `inputs/project_parameters.generated.yaml`, `inputs/generated_downstream.json`, `inputs/sprocket_inputs.json` |
-| 3. Check WDL | `sprocket check wdl/snap.wdl` | — |
-| 4. Validate inputs | `sprocket validate wdl/snap.wdl @inputs/sprocket_inputs.json` | — |
-| 5. Submit (if not dry-run) | `sprocket run ...` | LSF jobs |
+| Step | Script or command | Output |
+|------|-------------------|--------|
+| 1. Estimate resources | `scripts/estimate-snap-downstream-resources.R` | `<root_dir>/inputs/project_parameters.generated.yaml`, `inputs/generated_downstream.json`, `inputs/sprocket_inputs.json` |
+| 2. Render Sprocket config | `scripts/render-sprocket-config.sh` | `inputs/sprocket.generated.toml` |
+| 3. Check WDL | `sprocket check workflows/daedalus_from_cellranger.wdl` | — |
+| 4. Validate inputs | `sprocket validate workflows/daedalus_from_cellranger.wdl @inputs/sprocket_inputs.json --config inputs/sprocket.generated.toml` | — |
+| 5. Submit (if not dry-run) | `sprocket run ... --output-dir out --no-call-cache` | LSF jobs |
+| 6. Collect resource usage | `scripts/collect-snap-resource-usage.sh --latest --json` | `out/resource_usage/` |
 
 The resource estimator:
 
 - Counts samples from `project_metadata.tsv` (or Cell Ranger output directories).
 - Reads **Cell Ranger** `metrics_summary.csv` for cells per sample.
-- Scales LSF CPU, memory, queue, and `future_globals_*` values (baseline: 8 samples × 50k cells).
+- Scales LSF CPU, memory, and `future_globals_*` values (baseline: 8 samples × 50k cells).
 - Adds **20% LSF memory headroom** to every module’s `*_memory_gb` value (via `apply_lsf_memory_headroom()` in `estimate-snap-downstream-resources.R`) so jobs are not killed when usage spikes slightly above the base estimate. Example: upstream base **30 GB** → **36 GB** requested on LSF (`ceil(30 × 1.2)`).
 - Copies **workflow module toggles** from `workflow_profile` in your master YAML into Sprocket inputs.
 
@@ -104,15 +116,15 @@ The pipeline supports **three ways to run** downstream modules. The config file 
 
 | How you launch | Launcher | Config file used |
 |----------------|----------|------------------|
-| **WDL / Sprocket** | `bash launch-snap-downstream.sh --submit` or `bash scripts/launch-snap-sprocket.sh` | `inputs/project_parameters.generated.yaml` |
+| **WDL / Sprocket** | `bash launch-snap-downstream.sh --submit` or `bash scripts/launch-snap-sprocket.sh` | `<root_dir>/inputs/project_parameters.generated.yaml` |
 | **Full LSF chain** | `bash launch_full_pipeline.sh` | `project_parameters.Config.yaml` |
 | **Interactive / per-module LSF** | Run `analyses/<module>/run-*.sh` or `Rscript run-*.R` directly | `project_parameters.Config.yaml` |
 
 ### How it works
 
-- **WDL/Sprocket** sets `SNAP_CONFIG_FILE` in each task (`wdl/tasks.wdl`) to the generated overlay. Module scripts detect this and load the generated YAML (scaled resources + paths refreshed at launch).
+- **WDL/Sprocket** sets `SNAP_CONFIG_FILE` in `tasks/post_cellranger_required.wdl` and `tasks/post_cellranger_optional.wdl` to the generated overlay. Module scripts detect this and load the generated YAML (scaled resources + paths refreshed at launch).
 - **All other run modes** do not set `SNAP_CONFIG_FILE`, so modules load the master template `project_parameters.Config.yaml`.
-- **FastQC and Cell Ranger** are unchanged: they still read `project_parameters.Config.yaml` directly (grep in shell scripts). They run before the WDL downstream workflow.
+- **FastQC and Cell Ranger** remain outside this WDL workflow and continue to read `project_parameters.Config.yaml` directly.
 
 ### Helpers (R and bash)
 
@@ -152,7 +164,7 @@ Rscript analyses/upstream-analysis/run-upstream-analysis.R
 | File | When to edit |
 |------|----------------|
 | `project_parameters.Config.yaml` | Biology, paths, `workflow_profile`, emails — **always edit this** for interactive/LSF runs |
-| `inputs/project_parameters.generated.yaml` | **Do not edit by hand** — regenerated by `estimate-snap-downstream-resources.R` on each Sprocket launch |
+| `<root_dir>/inputs/project_parameters.generated.yaml` | **Do not edit by hand** — regenerated by `estimate-snap-downstream-resources.R` on each Sprocket launch |
 
 ---
 
@@ -166,7 +178,7 @@ This is your main configuration file. The launcher **does not overwrite** it by 
 
 | Section | What to set |
 |---------|-------------|
-| Project paths | `root_dir`, `data_dir`, `metadata_dir` — use absolute paths for your project (estimator refreshes these on each run). |
+| Project paths | `root_dir`, `data_dir`, `metadata_dir` — use absolute paths for your project (estimator resolves these on each run). |
 | `workflow_profile` | Turn modules on/off (`run_upstream`, `run_integrative`, `run_cluster`, etc.). |
 | `resource_profile.container_image` | Full path to the Seurat Apptainer `.sif` if not at `<root_dir>/rstudio_4.4.0_seurat_4.4.0_latest.sif`. |
 | Biology / QC | Upstream filters (`min_genes`, `min_count`, `condition_value*`), integration method, clustering resolution, annotation method, etc. |
@@ -206,7 +218,7 @@ Define samples, FASTQ paths, and optional metadata columns (`condition`, etc.). 
 
 ### 3. `sprocket.toml` (optional)
 
-Default LSF backend settings (queue, concurrency, job prefix). Usually fine as-is. Edit if you need a different queue or concurrency limits. The **container image** is passed per-task from YAML/workflow inputs, not from `sprocket.toml`.
+Default LSF backend settings (queue, concurrency, job prefix). Usually fine as-is. Edit if you need a different queue or concurrency limits. The launcher copies these settings to `inputs/sprocket.generated.toml`; do not edit the generated copy. The **container image** is passed per-task from YAML/workflow inputs, not from `sprocket.toml`.
 
 ### 4. Supporting data files (when those modules are enabled)
 
@@ -224,12 +236,12 @@ These are regenerated on each launch:
 
 | File | Reason |
 |------|--------|
-| `wdl/snap.wdl` | Auto-generated; nested optional modules require the generator |
-| `inputs/project_parameters.generated.yaml` | Runtime config overlay (master + scaled resources) |
+| `<root_dir>/inputs/project_parameters.generated.yaml` | Runtime config overlay (master + scaled resources) |
 | `inputs/generated_downstream.json` | Resource estimate snapshot |
 | `inputs/sprocket_inputs.json` | Flat inputs for `sprocket validate` / `sprocket run` |
+| `inputs/sprocket.generated.toml` | Runtime Sprocket configuration |
 
-To change WDL structure, edit `scripts/generate-snap-wdl.R` and re-run the launcher.
+To change WDL structure, edit `workflows/daedalus_from_cellranger.wdl`, `tasks/post_cellranger_required.wdl`, and `tasks/post_cellranger_optional.wdl`.
 
 ---
 
@@ -237,8 +249,7 @@ To change WDL structure, edit `scripts/generate-snap-wdl.R` and re-run the launc
 
 | Script | Purpose |
 |--------|---------|
-| `launch-snap-sprocket.sh` | Main orchestrator (WDL gen → estimate → check → validate → run) |
-| `generate-snap-wdl.R` | Builds `wdl/snap.wdl` with all modules optional |
+| `launch-snap-sprocket.sh` | Main orchestrator (estimate → render config → check → validate → run → resource report) |
 | `estimate-snap-downstream-resources.R` | Cell Ranger metrics → LSF resources + YAML/JSON |
 | `render-sprocket-config.sh` | Writes `inputs/sprocket.generated.toml` for launch |
 | `monitor-snap-task-emails.sh` | Background per-module start/complete emails while Sprocket runs |
@@ -252,16 +263,13 @@ Root launcher (one level up): `launch-snap-downstream.sh`
 
 ---
 
-
----
-
 ## Resource usage (requested vs actual)
 
 After each Sprocket run, the launcher calls `scripts/collect-snap-resource-usage.sh` to compare **requested** LSF resources (from task `inputs.json`) with **actual** usage from LSF (`bjobs`).
 
 Reports are written to:
 
-```
+```text
 out/resource_usage/resource_usage_<run_id>.csv
 out/resource_usage/resource_usage_<run_id>.json
 ```
@@ -294,7 +302,7 @@ bash scripts/collect-snap-resource-usage.sh --snap-root . --run-id 2026-08-31_23
 | Upstream QC / Seurat | `run_upstream` | `run_upstream` |
 | Integrative (Harmony, etc.) | `run_integrative` | `run_integrative` |
 | Cluster / markers | `run_cluster` | `run_cluster` |
-| Contamination removal | `run_contamination_removal` | `run_contamination` |
+| Contamination removal | `run_contamination_removal` | `run_contamination_removal` |
 | Cell-type annotation | `run_cell_types` | `run_cell_types` |
 | Clone phylogeny | `run_clone_phylogeny` | `run_clone_phylogeny` |
 | DE / GO | `run_de_go` | `run_de_go` |
@@ -313,7 +321,7 @@ Notifications go to **`CONTACT_EMAIL`** in `project_parameters.Config.yaml` (pas
 | Each module completed / failed | `monitor-snap-task-emails.sh` when LSF job reaches `DONE` / `EXIT` |
 | Whole workflow finished / failed | Launch script after `sprocket run` exits |
 
-Module emails use **`CONTACT_EMAIL`** from `project_parameters.Config.yaml`. The monitor runs in the background while Sprocket executes and polls `out/runs/sc_rna_seq_snap_downstream/_latest/calls/`.
+Module emails use **`CONTACT_EMAIL`** from `project_parameters.Config.yaml`. The monitor runs in the background while Sprocket executes and polls `out/runs/daedalus_from_cellranger/_latest/calls/`.
 
 To change the recipient, edit `CONTACT_EMAIL` in the master YAML and re-run the launcher.
 
@@ -325,7 +333,7 @@ To change the recipient, edit `CONTACT_EMAIL` in the master YAML and re-run the 
 |-------|-----|
 | `sprocket not found` | `module load sprocket` on an HPC node |
 | `singularity: command not found` inside task | Load singularity before launch: `module load singularity`. Tasks must not call `singularity exec` manually — Sprocket wraps commands via `runtime.container`. |
-| Missing Cell Ranger metrics | Complete Cell Ranger or pass `--estimated-cells-per-sample` |
+| Missing Cell Ranger metrics | Complete Cell Ranger or run `Rscript scripts/estimate-snap-downstream-resources.R --snap-root . --output inputs/generated_downstream.json --estimated-cells-per-sample <count>` |
 | Container pull fails / `repository name must be lowercase` | Local `.sif` paths must use the `file://` scheme for Sprocket (auto-added in `sprocket_inputs.json`). Keep plain paths in YAML; re-run the launcher to regenerate inputs. |
 | Wrong modules running | Edit `workflow_profile` in `project_parameters.Config.yaml`, then re-launch |
 | LSF job killed at memory limit (`TERM_MEMLIMIT`) | Re-run the launcher so `estimate-snap-downstream-resources.R` refreshes `inputs/sprocket_inputs.json` with the 20% headroom applied. If a module still OOMs, increase the base tier manually in `compute_resources()` or reduce parallel work inside that R module. |

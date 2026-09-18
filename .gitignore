@@ -21,3 +21,15 @@ bin-release/
 # Desktop Services Store - invisible file that gets automatically created anytime you open a folder with Finder on the macOS
 .DS_Store
 */.DS_Store
+
+# Sprocket unit test execution artifacts
+test/runs/
+
+# Launcher-generated runtime files
+inputs/generated_downstream.json
+inputs/project_parameters.generated.yaml
+inputs/sprocket.generated.toml
+inputs/sprocket_inputs.json
+
+# Generated WDL documentation
+_site/

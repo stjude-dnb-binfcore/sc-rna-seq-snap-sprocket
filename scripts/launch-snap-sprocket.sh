@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Launch downstream snap workflow (upstream onwards) via Sprocket.
+# Launch the static daedalus_from_cellranger workflow (upstream onwards) via Sprocket.
 #
 # Usage:
-#   bash scripts/launch-snap-sprocket.sh [--snap-root PATH] [--no-update-yaml] [--yaml-in-place] [--dry-run] [--no-call-cache] [--no-resource-report]
+#   bash scripts/launch-snap-sprocket.sh [--snap-root PATH] [--no-update-yaml] [--yaml-in-place] [--dry-run] [--no-resource-report]
 #
-# --no-call-cache: force all WDL tasks to re-run (Sprocket otherwise reuses prior upstream results).
+# Sprocket call caching is always disabled so each launch runs the selected modules.
 #
 # --update-yaml (default): writes inputs/project_parameters.generated.yaml;
-#   populates root_dir/data_dir/metadata_dir from snap-root and reads Cell Ranger metrics;
+#   resolves root_dir/data_dir/metadata_dir from the master config and reads Cell Ranger metrics;
 #   project_parameters.Config.yaml (your master template) is not modified.
 # --yaml-in-place: overwrite master YAML (creates project_parameters.Config.yaml.orig first).
 
@@ -18,7 +18,6 @@ SNAP_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 UPDATE_YAML=1
 YAML_IN_PLACE=0
 DRY_RUN=0
-NO_CALL_CACHE=0
 COLLECT_RESOURCES=1
 INPUTS=""
 
@@ -30,17 +29,16 @@ while [[ $# -gt 0 ]]; do
     --no-update-yaml) UPDATE_YAML=0; shift ;;
     --yaml-in-place) YAML_IN_PLACE=1; UPDATE_YAML=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
-    --no-call-cache) NO_CALL_CACHE=1; shift ;;
     --no-resource-report) COLLECT_RESOURCES=0; shift ;;
     -h|--help)
-      echo "Usage: bash scripts/launch-snap-sprocket.sh [--snap-root PATH] [--no-update-yaml] [--yaml-in-place] [--dry-run] [--no-call-cache] [--no-resource-report]"
+      echo "Usage: bash scripts/launch-snap-sprocket.sh [--snap-root PATH] [--no-update-yaml] [--yaml-in-place] [--dry-run] [--no-resource-report]"
       exit 0 ;;
     *) echo "Unknown option: $1"; exit 1 ;;
   esac
 done
 
-WDL_DIR="${SNAP_ROOT}/wdl"
-WORKFLOW="${WDL_DIR}/snap.wdl"
+WORKFLOW_NAME="daedalus_from_cellranger"
+WORKFLOW="${SNAP_ROOT}/workflows/${WORKFLOW_NAME}.wdl"
 CONFIG="${SNAP_ROOT}/sprocket.toml"
 GENERATED_CONFIG="${SNAP_ROOT}/inputs/sprocket.generated.toml"
 GENERATED="${SNAP_ROOT}/inputs/generated_downstream.json"
@@ -48,6 +46,11 @@ SPROCKET_INPUTS="${SNAP_ROOT}/inputs/sprocket_inputs.json"
 NOTIFY_SCRIPT="${SCRIPT_DIR}/snap-notify-email.sh"
 
 mkdir -p "${SNAP_ROOT}/inputs"
+
+if [[ ! -f "${WORKFLOW}" ]]; then
+  echo "Missing static WDL: ${WORKFLOW}" >&2
+  exit 1
+fi
 
 if ! command -v sprocket >/dev/null 2>&1; then
   echo "sprocket not found. On St. Jude HPC: module load sprocket"
@@ -63,8 +66,7 @@ UPDATE_FLAG=()
 [[ "${UPDATE_YAML}" -eq 1 ]] && UPDATE_FLAG=(--update-yaml)
 [[ "${YAML_IN_PLACE}" -eq 1 ]] && UPDATE_FLAG+=(--yaml-in-place)
 
-echo "==> Generating WDL (all modules optional)"
-Rscript "${SCRIPT_DIR}/generate-snap-wdl.R" --output "${WORKFLOW}"
+echo "==> Using static WDL: ${WORKFLOW}"
 
 echo "==> Estimating downstream resources"
 Rscript "${SCRIPT_DIR}/estimate-snap-downstream-resources.R" \
@@ -87,7 +89,7 @@ MONITOR_SCRIPT="${SCRIPT_DIR}/monitor-snap-task-emails.sh"
 RESOURCE_SCRIPT="${SCRIPT_DIR}/collect-snap-resource-usage.sh"
 
 NOTIFY_EMAIL="$(
-  grep -o '"sc_rna_seq_snap_downstream.notify_email"[[:space:]]*:[[:space:]]*"[^"]*"' "${INPUTS}" \
+  grep -o '"daedalus_from_cellranger.notify_email"[[:space:]]*:[[:space:]]*"[^"]*"' "${INPUTS}" \
     | sed -n '1s/.*"\([^"]*\)"$/\1/p'
 )"
 
@@ -110,8 +112,8 @@ send_workflow_email "[snap] workflow: submitted" \
   "Snap downstream workflow submitted at $(date -Is)\nProject: ${SNAP_ROOT}\nConfig: ${CONFIG}"
 
 set +e
-SPROCKET_RUN_FLAGS=(run "${WORKFLOW}" @"${INPUTS}" --config "${CONFIG}")
-[[ "${NO_CALL_CACHE}" -eq 1 ]] && SPROCKET_RUN_FLAGS+=(--no-call-cache)
+# Shared directories are passed as String paths, so call caching cannot detect changes to their contents.
+SPROCKET_RUN_FLAGS=(run "${WORKFLOW}" @"${INPUTS}" --config "${CONFIG}" --output-dir "${SNAP_ROOT}/out" --no-call-cache)
 sprocket "${SPROCKET_RUN_FLAGS[@]}" &
 SPROCKET_PID=$!
 
@@ -137,6 +139,6 @@ if [[ "${RUN_EXIT}" -eq 0 ]]; then
     "Snap downstream workflow completed successfully at $(date -Is)\nProject: ${SNAP_ROOT}"
 else
   send_workflow_email "[snap] workflow: failed" \
-    "Snap downstream workflow failed (exit ${RUN_EXIT}) at $(date -Is)\nProject: ${SNAP_ROOT}\nCheck: ${SNAP_ROOT}/out/runs/sc_rna_seq_snap_downstream/"
+    "Snap downstream workflow failed (exit ${RUN_EXIT}) at $(date -Is)\nProject: ${SNAP_ROOT}\nCheck: ${SNAP_ROOT}/out/runs/${WORKFLOW_NAME}/"
 fi
 exit "${RUN_EXIT}"

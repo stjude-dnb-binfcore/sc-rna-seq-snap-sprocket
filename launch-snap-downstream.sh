@@ -9,14 +9,14 @@ set -euo pipefail
 #   - Apptainer/Singularity image at rstudio_4.4.0_seurat_4.4.0_latest.sif
 #
 # Usage (from this directory):
-#   bash launch-snap-downstream.sh              # dry-run: validate WDL + regenerate YAML/inputs
+#   bash launch-snap-downstream.sh              # dry-run: validate static WDL + refresh YAML/inputs
 #   bash launch-snap-downstream.sh --submit     # submit to LSF via Sprocket
 #
 # What happens automatically:
 #   1. Counts samples from project_metadata.tsv (or Cell Ranger output dirs)
 #   2. Reads Cell Ranger metrics_summary.csv for cells/sample
-#   3. Scales LSF cpu/memory/queue per module (baseline: 8 samples x 50k cells)
-#   4. Writes inputs/project_parameters.generated.yaml (master Config.yaml unchanged)
+#   3. Scales LSF CPU and memory per module (baseline: 8 samples x 50k cells)
+#   4. Writes <root_dir>/inputs/project_parameters.generated.yaml (master Config.yaml unchanged)
 #   5. Writes inputs/generated_downstream.json for Sprocket
 #
 # Edit project_parameters.Config.yaml for biology parameters and workflow_profile toggles.

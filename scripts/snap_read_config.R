@@ -1,6 +1,6 @@
 #' Resolve and read the snap project YAML config.
 #'
-#' WDL / Sprocket tasks set \code{SNAP_CONFIG_FILE} (see wdl/tasks.wdl) to
+#' WDL / Sprocket tasks set \code{SNAP_CONFIG_FILE} (see tasks/post_cellranger_required.wdl and tasks/post_cellranger_optional.wdl) to
 #' \code{inputs/project_parameters.generated.yaml}. Interactive runs, LSF jobs,
 #' and launch_full_pipeline.sh do not set that variable and use the master
 #' \code{project_parameters.Config.yaml} instead.

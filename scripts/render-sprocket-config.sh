@@ -26,7 +26,7 @@ cp "${BASE_CONFIG}" "${OUT_CONFIG}"
 NOTIFY_EMAIL=""
 if [[ -f "${INPUTS}" ]]; then
   NOTIFY_EMAIL="$(
-    grep -o '"sc_rna_seq_snap_downstream.notify_email"[[:space:]]*:[[:space:]]*"[^"]*"' "${INPUTS}" \
+    grep -o '"daedalus_from_cellranger.notify_email"[[:space:]]*:[[:space:]]*"[^"]*"' "${INPUTS}" \
       | sed -n '1s/.*"\([^"]*\)"$/\1/p'
   )"
 fi
